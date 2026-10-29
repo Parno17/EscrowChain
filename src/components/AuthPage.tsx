@@ -285,41 +285,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
           {/* Card Container */}
           <div className="p-6 sm:p-7 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-md space-y-4">
-            
-            {/* Quick 1-Click Demo Login Button for Selected Role */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
-              selectedRole === 'admin'
-                ? 'bg-indigo-950/40 border-indigo-500/40'
-                : selectedRole === 'seller'
-                ? 'bg-teal-950/40 border-teal-500/40'
-                : 'bg-emerald-950/40 border-emerald-500/40'
-            }`}>
-              <div className="text-xs">
-                <span className="font-bold text-white block">
-                  {selectedRole === 'buyer' && '🚀 Masuk Langsung sbg Pembeli (Zayyini)'}
-                  {selectedRole === 'seller' && '🏪 Masuk Langsung sbg Penjual (Parno Husni)'}
-                  {selectedRole === 'admin' && '🛡️ Masuk Langsung sbg Admin Multi-Sig (Reza)'}
-                </span>
-                <span className="text-[11px] text-slate-400">
-                  {selectedRole === 'buyer' && 'Saldo: 14.50 SOL · Riwayat Pesanan & Refund Aktif'}
-                  {selectedRole === 'seller' && 'Saldo: 38.25 SOL · Manajemen Produk & Order Toko'}
-                  {selectedRole === 'admin' && 'Saldo: 450.00 SOL · Otoritas Approve Lepas Dana'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleQuickDemoByRole}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer shrink-0 transition-transform hover:scale-105 ${
-                  selectedRole === 'admin'
-                    ? 'bg-indigo-500 text-white hover:bg-indigo-400'
-                    : selectedRole === 'seller'
-                    ? 'bg-teal-400 text-slate-950 hover:bg-teal-300'
-                    : 'bg-emerald-400 text-slate-950 hover:bg-emerald-300'
-                }`}
-              >
-                1-Klik Masuk →
-              </button>
-            </div>
 
             {/* Segmented Auth Mode Switcher (Sign in vs Sign up) */}
             <div className="flex p-1 bg-slate-950 rounded-xl border border-slate-800">
@@ -391,9 +356,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       <span className="text-[10px] font-mono text-amber-400 font-semibold px-1 rounded bg-amber-500/20">
                         {selectedRole === 'admin' ? 'Admin Vault' : selectedRole === 'seller' ? 'Penjual UMKM' : 'Pembeli'}
                       </span>
-                    </div>
-                    <div className="text-[11px] text-slate-300">
-                      Otentikasi 1-klik dengan browser extension MetaMask atau akun tes EVM
                     </div>
                   </div>
                 </div>
