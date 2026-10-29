@@ -252,7 +252,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }`}
               >
                 <ShoppingBag className="w-4 h-4 shrink-0" />
-                <span>1. Pembeli</span>
+                <span>Pembeli</span>
               </button>
 
               <button
@@ -265,7 +265,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }`}
               >
                 <Store className="w-4 h-4 shrink-0" />
-                <span>2. Penjual</span>
+                <span>Penjual</span>
               </button>
 
               <button
@@ -278,7 +278,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 }`}
               >
                 <Lock className="w-4 h-4 shrink-0" />
-                <span>3. Admin</span>
+                <span>Admin</span>
               </button>
             </div>
           </div>
