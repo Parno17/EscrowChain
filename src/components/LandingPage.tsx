@@ -1,4 +1,7 @@
 import React from 'react';
+import heroSolanaImg from '../assets/images/hero_solana_escrow_1792757841783.jpg';
+import defiVaultImg from '../assets/images/defi_vault_yield_1792757843028.jpg';
+import amanahTokenImg from '../assets/images/amanah_token_emblem_1792757841936.jpg';
 import { useWeb3 } from '../context/Web3Context';
 import { 
   SOL_IDR_RATE, 
@@ -247,7 +250,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="lg:col-span-5">
               <div className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group">
                 <img
-                  src="/src/assets/images/hero_solana_escrow_1792757841783.jpg"
+                  src={heroSolanaImg}
                   alt="EscrowChain Solana Decentralized Escrow Vault"
                   referrerPolicy="no-referrer"
                   className="w-full h-96 lg:h-[480px] object-cover group-hover:scale-102 transition-transform duration-700"
@@ -280,7 +283,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             
             <div className="lg:col-span-6 relative rounded-2xl overflow-hidden border border-slate-800 group">
               <img
-                src="/src/assets/images/defi_vault_yield_1792757843028.jpg"
+                src={defiVaultImg}
                 alt="EscrowChain DeFi Escrow Yield Streaming Vault"
                 referrerPolicy="no-referrer"
                 className="w-full h-80 object-cover group-hover:scale-102 transition-transform duration-500"
@@ -409,7 +412,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative rounded-2xl p-4 bg-slate-900 border border-slate-800 text-center max-w-sm">
                 <img
-                  src="/src/assets/images/amanah_token_emblem_1792757841936.jpg"
+                  src={amanahTokenImg}
                   alt="Amanah Token AMN Cryptographic Emblem"
                   referrerPolicy="no-referrer"
                   className="w-56 h-56 mx-auto rounded-full object-cover shadow-2xl border-2 border-emerald-500/30"
