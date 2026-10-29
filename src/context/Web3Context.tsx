@@ -262,24 +262,58 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loginWithMetaMask = async (role: 'buyer' | 'seller' | 'admin' = 'buyer'): Promise<{ success: boolean; address?: string; error?: string }> => {
     try {
       let ethAddress = '';
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const eth = typeof window !== 'undefined' ? (window as any).ethereum : undefined;
+
+      if (eth) {
         try {
-          const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+          // Request akun dari MetaMask extension
+          const accounts = await eth.request({ method: 'eth_requestAccounts' });
           if (accounts && accounts.length > 0) {
             ethAddress = accounts[0];
           }
+
+          // Coba switch ke Sepolia (chainId 0xaa36a7 = 11155111)
+          try {
+            await eth.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xaa36a7' }],
+            });
+          } catch (switchErr: any) {
+            // Jika chain belum ada di MetaMask, tambahkan Sepolia
+            if (switchErr.code === 4902) {
+              try {
+                await eth.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: '0xaa36a7',
+                    chainName: 'Sepolia Test Network',
+                    nativeCurrency: { name: 'SepoliaETH', symbol: 'ETH', decimals: 18 },
+                    rpcUrls: ['https://rpc.sepolia.org'],
+                    blockExplorerUrls: ['https://sepolia.etherscan.io'],
+                  }],
+                });
+              } catch (_addErr) {
+                // Lanjutkan meskipun gagal tambah network
+              }
+            }
+          }
         } catch (err: any) {
-          console.warn('MetaMask user interaction note:', err);
+          // Jika user tolak koneksi, return error
+          if (err.code === 4001) {
+            showNotification('error', 'Koneksi MetaMask ditolak. Silakan izinkan akses di popup MetaMask.');
+            return { success: false, error: 'Ditolak pengguna' };
+          }
+          console.warn('MetaMask interaction note:', err);
         }
+      } else {
+        // Tidak ada extension MetaMask terdeteksi
+        showNotification('error', 'MetaMask tidak terdeteksi. Pasang extension MetaMask di browser Anda terlebih dahulu.');
+        return { success: false, error: 'MetaMask tidak terinstall' };
       }
 
       if (!ethAddress) {
-        // Fallback realistic Ethereum Sepolia testnet address for simulation
-        ethAddress = role === 'admin'
-          ? '0x12FrEskRoWvaULT999AmnhTreasuryX11111'
-          : role === 'seller'
-          ? '0x89DbKaG9T5xM8rQ2pL7nVsF4wE6kZ1cY3888pX9'
-          : '0x7Z1uYm8T4K3qB6hP2wRk9vLaE8nDcX5jM3490zK1';
+        showNotification('error', 'Tidak ada akun MetaMask yang terhubung. Buka MetaMask dan pastikan sudah login.');
+        return { success: false, error: 'Tidak ada akun' };
       }
 
       let existing = allAccounts.find(a => 

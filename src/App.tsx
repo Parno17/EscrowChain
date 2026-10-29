@@ -19,7 +19,7 @@ import { UserSecurityModal } from './components/UserSecurityModal';
 import { AcademicReportModal } from './components/AcademicReportModal';
 import { SolanaExplorerModal } from './components/SepoliaExplorerModal';
 import { EscrowOrder, OrderStatus, InitiatorType } from './types/escrow';
-import { SOL_IDR_RATE, AMN_IDR_RATE, PRESET_ACCOUNTS, SOLANA_PROGRAM_ID } from './data/mockData';
+import { SOL_IDR_RATE, AMN_IDR_RATE, SOLANA_PROGRAM_ID } from './data/mockData';
 import { 
   ShieldCheck, 
   Wallet, 
@@ -223,64 +223,22 @@ function DashboardContent() {
       {/* Main Workspace Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
         
-        {/* Quick Simulation & Role Switcher Toolbar */}
+        {/* Quick Simulation Toolbar */}
         <section className="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                Pemisah Akses Peran:
-              </span>
-              <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
-                activeAccount.role === 'admin'
-                  ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300'
-                  : activeAccount.role === 'seller'
-                  ? 'bg-teal-950/70 border-teal-500/40 text-teal-300'
-                  : 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
-              }`}>
-                {activeAccount.role === 'admin'
-                  ? '🔒 Tab Terkunci: Hanya Fitur Admin Multi-Sig'
-                  : activeAccount.role === 'seller'
-                  ? '🏪 Tab Terkunci: Hanya Fitur Penjual UMKM'
-                  : '🛒 Tab Terkunci: Hanya Fitur Pembeli'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-lg border border-slate-800">
-              {PRESET_ACCOUNTS.slice(0, 3)
-                .filter((acc) => {
-                  const currentRole = activeAccount.role || userAuth.role || 'buyer';
-                  if (currentRole === 'buyer') return acc.role === 'buyer';
-                  if (currentRole === 'seller') return acc.role === 'seller';
-                  if (currentRole === 'admin' || currentRole === 'arbiter') return acc.role === 'admin' || acc.role === 'arbiter';
-                  return acc.role === currentRole;
-                })
-                .map((acc) => {
-                  const isActive = activeAccount.address.toLowerCase() === acc.address.toLowerCase();
-                  return (
-                    <button
-                      key={acc.address}
-                      onClick={() => {
-                        setActiveAccount(acc);
-                        if (acc.role === 'buyer') setActiveTab('buyer');
-                        else if (acc.role === 'seller') setActiveTab('seller');
-                        else if (acc.role === 'admin' || acc.role === 'arbiter') setActiveTab('admin');
-                      }}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                        isActive
-                          ? acc.role === 'admin' || acc.role === 'arbiter'
-                            ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                            : acc.role === 'seller'
-                            ? 'bg-teal-500 text-slate-950 shadow-sm font-bold'
-                            : 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      {acc.label}
-                    </button>
-                  );
-                })}
-            </div>
-            
+            <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+              activeAccount.role === 'admin'
+                ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300'
+                : activeAccount.role === 'seller'
+                ? 'bg-teal-950/70 border-teal-500/40 text-teal-300'
+                : 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
+            }`}>
+              {activeAccount.role === 'admin'
+                ? '🔒 Hanya Fitur Admin Multi-Sig'
+                : activeAccount.role === 'seller'
+                ? '🏪 Hanya Fitur Penjual UMKM'
+                : '🛒 Hanya Fitur Pembeli'}
+            </span>
             <span className="text-xs text-slate-400 font-mono hidden xl:inline">
               {activeAccount.name} ({activeAccount.balanceSol.toFixed(2)} SOL · {activeAccount.balanceAmn} AMN)
             </span>

@@ -119,8 +119,27 @@ export const SellerPortal: React.FC = () => {
 
   // Shipping Tracking Modal
   const [shippingModalOrder, setShippingModalOrder] = useState<number | null>(null);
-  const [trackingNumber, setTrackingNumber] = useState('JNE-SOL-');
-  const [courierName, setCourierName] = useState('JNE Express Cargo');
+  const [trackingNumber, setTrackingNumber] = useState('JNE-');
+  const [courierName, setCourierName] = useState('JNE Express Cargo Web3 Track');
+
+  // Mapping kurir → prefix resi
+  const courierPrefixMap: Record<string, string> = {
+    'JNE Express Cargo Web3 Track': 'JNE-',
+    'SiCepat Kilat Web3 Express': 'SICEPAT-',
+    'J&T Express Logistics': 'JT-',
+    'GoSend / GrabExpress Instant': 'GOSEND-',
+    'AnterAja Express': 'ANTERAJA-',
+    'Pos Indonesia': 'POS-',
+    'Ninja Xpress': 'NINJA-',
+    'Tiki': 'TIKI-',
+  };
+
+  const handleCourierChange = (newCourier: string) => {
+    const prefix = courierPrefixMap[newCourier] || newCourier.split(' ')[0].toUpperCase() + '-';
+    const newTracking = prefix + Math.floor(10000000 + Math.random() * 90000000);
+    setCourierName(newCourier);
+    setTrackingNumber(newTracking);
+  };
 
   // Filter orders relevant to this seller
   const sellerOrders = orders.filter(
@@ -466,7 +485,8 @@ export const SellerPortal: React.FC = () => {
                         <button
                           onClick={() => {
                             setShippingModalOrder(order.id);
-                            setTrackingNumber('JNE-SOL-' + Math.floor(10000000 + Math.random() * 90000000));
+                            const prefix = courierPrefixMap[courierName] || 'JNE-';
+                            setTrackingNumber(prefix + Math.floor(10000000 + Math.random() * 90000000));
                           }}
                           className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
@@ -1094,13 +1114,17 @@ export const SellerPortal: React.FC = () => {
               <label className="block text-slate-300 font-medium mb-1">Kurir Ekspedisi:</label>
               <select
                 value={courierName}
-                onChange={(e) => setCourierName(e.target.value)}
+                onChange={(e) => handleCourierChange(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-teal-500"
               >
                 <option value="JNE Express Cargo Web3 Track">JNE Express Cargo</option>
+                <option value="J&T Express Logistics">J&amp;T Express</option>
                 <option value="SiCepat Kilat Web3 Express">SiCepat Kilat</option>
-                <option value="J&T Express Logistics">J&T Express</option>
-                <option value="GoSend / GrabExpress Instant">Instant Courier</option>
+                <option value="AnterAja Express">AnterAja Express</option>
+                <option value="Pos Indonesia">Pos Indonesia</option>
+                <option value="Ninja Xpress">Ninja Xpress</option>
+                <option value="Tiki">Tiki</option>
+                <option value="GoSend / GrabExpress Instant">GoSend / GrabExpress Instant</option>
               </select>
             </div>
             <div>
@@ -1110,8 +1134,10 @@ export const SellerPortal: React.FC = () => {
                 required
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder={`contoh: ${courierPrefixMap[courierName] || 'KURIR-'}88294101`}
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-teal-500"
               />
+              <p className="text-[11px] text-slate-500 mt-1">Prefix otomatis sesuai ekspedisi. Bisa diedit manual.</p>
             </div>
             <div className="flex gap-2">
               <button
