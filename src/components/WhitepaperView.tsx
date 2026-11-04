@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  BookOpen, 
   Layers, 
   Cpu, 
   Coins, 
@@ -12,17 +11,13 @@ import {
   ExternalLink, 
   CheckCircle2, 
   Lock, 
-  Share2, 
   ChevronRight,
   Download,
   Clock,
   Sparkles
 } from 'lucide-react';
 import { 
-  SOLANA_PROGRAM_ID, 
   TOKENOMICS_INFO, 
-  SOL_IDR_RATE, 
-  AMN_IDR_RATE, 
   SOLANA_GAS_FEE_SOL 
 } from '../data/mockData';
 
@@ -32,23 +27,34 @@ interface WhitepaperViewProps {
   onOpenAcademicReport: () => void;
 }
 
+type WhitepaperSection =
+  | 'overview'
+  | 'layer1'
+  | 'layer2'
+  | 'layer3'
+  | 'tokenomics'
+  | 'security'
+  | 'governance'
+  | 'status'
+  | 'references';
+
 export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
   onBackToApp,
   onOpenAudit,
   onOpenAcademicReport
 }) => {
-  const [activeSection, setActiveSection] = useState<
-    'overview' | 'layer1' | 'layer2' | 'layer3' | 'tokenomics' | 'security' | 'governance'
-  >('overview');
+  const [activeSection, setActiveSection] = useState<WhitepaperSection>('overview');
 
-  const sections = [
-    { id: 'overview', title: '00. Executive Summary & Problem' },
-    { id: 'layer1', title: '01. Layer 1: Solana Settlement Engine' },
-    { id: 'layer2', title: '02. Layer 2: Amanah DeFi & PDA Protocol' },
-    { id: 'layer3', title: '03. Layer 3: UMKM Gateway & Blinks' },
-    { id: 'tokenomics', title: '04. Tokenomics Amanah ($AMN)' },
-    { id: 'security', title: '05. Security & Anchor Invariants' },
-    { id: 'governance', title: '06. DAO Governance & Roadmap' },
+  const sections: { id: WhitepaperSection; title: string }[] = [
+    { id: 'overview', title: '00. Abstrak & Ringkasan Eksekutif' },
+    { id: 'layer1', title: '01. Fondasi & Model Settlement' },
+    { id: 'layer2', title: '02. Arsitektur & Siklus Escrow' },
+    { id: 'layer3', title: '03. Pengalaman Pengguna & Integrasi' },
+    { id: 'tokenomics', title: '04. Utilitas & Tokenomics AMN' },
+    { id: 'security', title: '05. Keamanan, Risiko & Asumsi' },
+    { id: 'governance', title: '06. Tata Kelola & Roadmap' },
+    { id: 'status', title: '07. Status Implementasi & Batasan' },
+    { id: 'references', title: '08. Referensi & Glosarium' },
   ];
 
   return (
@@ -68,7 +74,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
               <span className="text-sm font-bold text-white tracking-tight">
-                EscrowChain Whitepaper v2.5 · Token Amanah ($AMN)
+                EscrowChain Whitepaper v3.0 · Token Amanah ($AMN)
               </span>
             </div>
           </div>
@@ -78,7 +84,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
               onClick={onOpenAudit}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900 border border-slate-800 rounded-lg transition-colors cursor-pointer"
             >
-              <span>Anchor Smart Contract</span>
+              <span>Contoh Kode Anchor</span>
               <ExternalLink className="w-3 h-3 text-emerald-400" />
             </button>
             <button
@@ -108,7 +114,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                   return (
                     <button
                       key={s.id}
-                      onClick={() => setActiveSection(s.id as any)}
+                      onClick={() => setActiveSection(s.id)}
                       className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer flex items-center justify-between ${
                         isActive
                           ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold'
@@ -123,9 +129,9 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
               </nav>
 
               <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 space-y-1 font-mono">
-                <div>Program: {SOLANA_PROGRAM_ID.slice(0, 10)}...</div>
-                <div>Standard: Solana SPL Token</div>
-                <div>Status: Audited & Verified</div>
+                <div>Dokumen: EscrowChain · v3.0</div>
+                <div>Jaringan target: Solana</div>
+                <div>Status produk: Prototipe simulasi</div>
               </div>
             </div>
           </aside>
@@ -138,42 +144,26 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
               <article className="space-y-6 animate-fade-in">
                 <div className="border-b border-slate-800 pb-4">
                   <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
-                    Chapter 00 · Executive Summary
+                    Chapter 00 · Abstract & Executive Summary
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Krisis Kepercayaan E-Commerce Indonesia & Paradigma Rekber Web3
+                    EscrowChain: Rancangan Rekening Bersama Digital untuk Transaksi UMKM
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Pertumbuhan ekonomi digital Indonesia yang diproyeksikan melampaui $130 Miliar pada tahun 2030 menghadapi kendala struktural fundamental: <strong>krisis kepercayaan (trust deficit)</strong> antara pelaku Usaha Mikro, Kecil, dan Menengah (UMKM) dan konsumen.
+                    EscrowChain adalah rancangan aplikasi rekening bersama digital yang bertujuan membantu pembeli dan penjual UMKM mengelola pembayaran, bukti pemenuhan pesanan, serta penyelesaian sengketa secara lebih transparan. Dokumen ini menjelaskan masalah, arsitektur yang direncanakan, token Amanah ($AMN), model risiko, dan status implementasi prototipe.
                   </p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
-                    <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-500/30">
-                      <div className="text-rose-400 text-xs font-bold uppercase">Tingkat Fraud COD Tinggi</div>
-                      <div className="text-xl font-bold font-mono text-white mt-1">12% - 18%</div>
-                      <p className="text-xs text-rose-200/80 mt-1">
-                        Paket Cash-on-Delivery (COD) ditolak konsumen saat tiba, menyebabkan kerugian ongkos kirim dan stok rusak bagi UMKM.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30">
-                      <div className="text-amber-400 text-xs font-bold uppercase">Potongan Marketplace Eksploitatif</div>
-                      <div className="text-xl font-bold font-mono text-white mt-1">6.5% - 12.0%</div>
-                      <p className="text-xs text-amber-200/80 mt-1">
-                        Komisi platform e-commerce terpusat menggerus margin laba bersih produsen lokal UMKM.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/30">
-                      <div className="text-indigo-400 text-xs font-bold uppercase">Pencairan Dana Lambat</div>
-                      <div className="text-xl font-bold font-mono text-white mt-1">3 - 7 Hari Kerja</div>
-                      <p className="text-xs text-indigo-200/80 mt-1">
-                        Dana penjual ditahan di rekening bank terpusat tanpa bunga kompensasi, menghambat arus kas UMKM.
-                      </p>
-                    </div>
+                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                    <div className="text-xs font-bold text-white">Ruang lingkup dokumen</div>
+                    <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                      <li>Tujuan dan batasan produk rekber untuk transaksi barang UMKM.</li>
+                      <li>Lifecycle pesanan, pembayaran SOL atau AMN, refund, dan peran pihak terkait.</li>
+                      <li>Model utilitas AMN yang masih berupa parameter prototipe, bukan penawaran aset.</li>
+                      <li>Asumsi keamanan, risiko operasional, rencana validasi, serta sumber teknis.</li>
+                    </ul>
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-2">
@@ -181,18 +171,21 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                   </h3>
 
                   <p>
-                    <strong>EscrowChain</strong> menghadirkan rekonstruksi penuh mekanisme rekening bersama berbasis teknologi blockchain Solana berbiaya rendah dengan dukungan native token <strong>Amanah ($AMN)</strong>. Dengan memanfaatkan kecepatan <strong>Solana Proof of History (400ms finalitas)</strong>, biaya gas mikrocent (~Rp 12/tx), dan integrasi <strong>DeFi Yield Streaming</strong>, dana jual beli dikunci secara matematis di Program Derived Addresses (PDA) tanpa campur tangan kustodian terpusat.
+                    Prototipe <strong>EscrowChain</strong> memodelkan mekanisme rekber dan pengalaman pengguna dengan SOL dan token <strong>Amanah ($AMN)</strong>. Implementasi antarmuka saat ini menggunakan state dan transaksi simulasi lokal; belum ada escrow nyata pada Solana, transfer SPL, integrasi yield, ataupun audit yang dapat diverifikasi. Rencana on-chain memerlukan program escrow teruji, mint token sah, wallet signer, dan mekanisme pemulihan yang ditetapkan.
                   </p>
 
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                     <div className="text-xs font-bold text-white">4 Pilar Utama Arsitektur Amanah:</div>
                     <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                      <li><strong>Kecepatan & Biaya Rendah:</strong> Mengeliminasi biaya gas mahal Ethereum yang tidak terjangkau bagi transaksi mikro UMKM.</li>
-                      <li><strong>DeFi Yield Sharing:</strong> Uang yang tertahan selama masa pengiriman tidak menganggur, melainkan menghasilkan bunga modal yang dibagi antara pembeli, penjual, dan token burn.</li>
-                      <li><strong>Proteksi Auto-Refund Waktu:</strong> Menjamin pembeli mendapatkan pengembalian otomatis jika penjual tidak memproses pesanan sesuai batas deadline slot.</li>
-                      <li><strong>Tokenomics $AMN:</strong> Menghadirkan insentif ekonomi berkelanjutan melalui diskon biaya, hadiah loyalitas, dan mekanisme deflasi buyback-and-burn on-chain.</li>
+                      <li><strong>Settlement terprogram:</strong> Dana dapat ditahan dan dilepas berdasarkan state serta otorisasi yang eksplisit setelah program on-chain dibuat dan diaudit.</li>
+                      <li><strong>Alur dua sisi:</strong> Pembeli mendanai pesanan, penjual mengirimkan barang, dan pembeli atau mekanisme penyelesaian menangani konfirmasi/refund.</li>
+                      <li><strong>Metode pembayaran:</strong> Antarmuka prototipe menyediakan simulasi SOL dan AMN; transaksi keduanya masih lokal.</li>
+                      <li><strong>Insentif AMN:</strong> Model prototipe menampilkan cashback 0,5% untuk pembayaran SOL dan 3% untuk AMN; parameter ini perlu governance, pendanaan, serta validasi ekonomi sebelum peluncuran.</li>
                     </ul>
                   </div>
+                  <p className="text-xs text-amber-300">
+                    EscrowChain adalah proyek mandiri pada Solana. Axelar digunakan hanya sebagai referensi publik untuk susunan dokumentasi protokol; tidak ada integrasi, afiliasi, atau dukungan Axelar.
+                  </p>
                 </div>
 
                 <div className="flex justify-end pt-4">
@@ -200,7 +193,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                     onClick={() => setActiveSection('layer1')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
                   >
-                    <span>Lanjut ke Layer 1: Solana Settlement →</span>
+                    <span>Lanjut ke Fondasi & Settlement →</span>
                   </button>
                 </div>
               </article>
@@ -214,16 +207,15 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                     Chapter 01 · Base Layer
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Layer 1: Fondasi Settlement Solana & Cryptographic Clock
+                    Fondasi Settlement & Model Akun Solana
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Sebagai settlement layer dasar, Amanah Protocol memanfaatkan arsitektur monolitik berkinerja tinggi Solana untuk menjamin skalabilitas masif transaksi e-commerce tanpa fragmentasi Layer 2 rollup.
+                    Solana dipilih sebagai jaringan target untuk settlement karena mendukung program dan akun yang dapat diprogram. Pilihan jaringan tidak menjamin throughput, biaya, atau finalitas tertentu; nilai aktual berubah sesuai kondisi jaringan dan harus diukur kembali saat implementasi.
                   </p>
 
-                  {/* 4 Inovasi Solana */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                       <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
@@ -231,7 +223,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                         <span>Proof of History (PoH)</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Verifiable Delay Function (VDF) berbasis SHA-256 berurutan yang menyediakan stempel waktu kriptografi universal sebelum konsensus dimulai, menghilangkan latensi negosiasi waktu antar validator.
+                        Mekanisme pengurutan waktu yang menjadi bagian dari rancangan Solana. Ini bukan jaminan bahwa transaksi aplikasi akan final dalam durasi tetap.
                       </p>
                     </div>
 
@@ -241,7 +233,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                         <span>Tower BFT Consensus</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Implementasi khusus PBFT yang sinkron dengan PoH, memungkinkan konfirmasi transaksi sub-detik (~400ms per slot) dengan keamanan Byzantine fault tolerant matematis.
+                        Sistem konsensus Solana berperan dalam mengonfirmasi blok. Aplikasi harus memeriksa status transaksi dan tingkat komitmen yang sesuai, bukan mengasumsikan transaksi berhasil hanya dari pengiriman.
                       </p>
                     </div>
 
@@ -251,7 +243,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                         <span>Sealevel Parallel Runtime</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Virtual Machine paralel pertama di industri blockchain. Transaksi rekber yang mengakses order ID berbeda dieksekusi secara simultan pada core CPU validator tanpa saling memblokir (non-blocking concurrency).
+                        Runtime Solana mengelola eksekusi program dan akses akun. EscrowChain tetap harus merancang kepemilikan akun, izin, dan validasi instruksi dengan benar.
                       </p>
                     </div>
 
@@ -261,54 +253,13 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                         <span>Gulf Stream (Mempool-less)</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Protokol penerusan transaksi langsung ke validator pemimpin slot berikutnya, meniadakan penumpukan mempool publik dan mencegah manipulasi MEV / front-running pada transaksi UMKM.
+                        Infrastruktur propagasi transaksi berada pada level jaringan; penggunaan Solana sendiri tidak menghilangkan seluruh risiko MEV, urutan transaksi, kegagalan RPC, atau transaksi yang kedaluwarsa.
                       </p>
                     </div>
                   </div>
 
-                  {/* Gas Fee Matrix */}
-                  <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
-                    <div className="p-3 bg-slate-950 font-semibold text-xs text-slate-200 border-b border-slate-800">
-                      Tabel Komparasi Settlement: Solana vs Ethereum vs Tradisional
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-900 text-slate-400 border-b border-slate-800">
-                          <tr>
-                            <th className="p-3">Parameter Evaluasi</th>
-                            <th className="p-3">Solana (Amanah Protocol)</th>
-                            <th className="p-3">Ethereum Sepolia / Mainnet</th>
-                            <th className="p-3">Rekber Bank Tradisional</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/60 font-mono text-slate-300">
-                          <tr>
-                            <td className="p-3 font-sans font-medium text-white">Biaya Transaksi (Gas Fee)</td>
-                            <td className="p-3 text-emerald-400 font-bold">~0.000005 SOL (Rp 12)</td>
-                            <td className="p-3 text-rose-400">0.0015 ETH (Rp 68.000+)</td>
-                            <td className="p-3 text-amber-400">Rp 6.500 - Rp 25.000</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-sans font-medium text-white">Waktu Finalitas Konfirmasi</td>
-                            <td className="p-3 text-emerald-400 font-bold">400 milidetik</td>
-                            <td className="p-3 text-rose-400">15 – 60 detik</td>
-                            <td className="p-3 text-amber-400">1 – 3 hari kerja</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-sans font-medium text-white">Throughput Maksimum (TPS)</td>
-                            <td className="p-3 text-emerald-400 font-bold">65.000+ TPS</td>
-                            <td className="p-3 text-rose-400">~15 – 30 TPS</td>
-                            <td className="p-3 text-slate-400">Batasan kliring BI-FAST</td>
-                          </tr>
-                          <tr>
-                            <td className="p-3 font-sans font-medium text-white">Model Eksekusi Kontrak</td>
-                            <td className="p-3 text-emerald-400 font-bold">Anchor PDA Parallel State</td>
-                            <td className="p-3 text-slate-300">EVM Single Thread Serial</td>
-                            <td className="p-3 text-slate-400">Server database terpusat</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200">
+                    <strong>Biaya jaringan:</strong> estimasi gas fee {SOLANA_GAS_FEE_SOL} SOL hanya nilai simulasi aplikasi. Biaya transaksi riil bergantung pada instruksi, priority fee, kondisi cluster, dan wallet; periksa estimasi sebelum pengguna menandatangani.
                   </div>
                 </div>
 
@@ -323,7 +274,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                     onClick={() => setActiveSection('layer2')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Lanjut ke Layer 2: DeFi Protocol & PDA →
+                    Lanjut ke Arsitektur Escrow →
                   </button>
                 </div>
               </article>
@@ -337,20 +288,20 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                     Chapter 02 · Protocol Layer
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Layer 2: Amanah DeFi Protocol & PDA State Machine
+                    Arsitektur Escrow & Siklus Pesanan
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Layer 2 mendefinisikan logika smart contract, transisi state mesin rekening bersama, dan integrasi DeFi yield streaming menggunakan kerangka kerja Solana Anchor.
+                    Bagian ini menjelaskan rancangan logika escrow. Siklus di bawah adalah model produk; penerapan sebenarnya harus menegakkan setiap transisi dan otorisasi di program Solana, bukan hanya di UI.
                   </p>
 
                   <h3 className="text-lg font-bold text-white pt-2">
                     1. Arsitektur Program Derived Addresses (PDA)
                   </h3>
                   <p>
-                    Tidak seperti smart contract EVM di mana kontrak menyimpan state di storage internal yang rentan terhadap serangan reentrancy, Solana memisahkan logika program dari akun data. Setiap pesanan dialokasikan pada PDA unik yang dihitung secara deterministik:
+                    Program Solana memisahkan kode program dan akun data. Dalam rancangan EscrowChain, akun escrow dan vault dapat diturunkan dari seeds deterministik yang mencakup identitas pesanan. Contoh berikut adalah pseudocode konseptual, bukan derivasi yang sudah dipakai program ter-deploy:
                   </p>
 
                   <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-emerald-300 overflow-x-auto">
@@ -374,54 +325,56 @@ Pubkey::find_program_address(
                   </pre>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    2. Inovasi Zero-Loss DeFi Escrow Yield Streaming
+                    2. Pembayaran, biaya jaringan, dan cashback
                   </h3>
                   <p>
-                    Dalam transaksi fisik UMKM, waktu antara pembayaran pembeli hingga verifikasi pengiriman kurir membutuhkan waktu 2 hingga 5 hari. Pada rekening bersama tradisional, modal ini menjadi aset tidak produktif.
+                    Prototipe menyediakan pilihan pembayaran SOL dan AMN. Untuk menjaga pembukuan, nominal rupiah, padanan token, biaya jaringan SOL, serta metode bayar perlu disimpan sebagai nilai terpisah. Saldo SOL tetap diperlukan untuk biaya jaringan walaupun nominal escrow dibayar dengan AMN.
                   </p>
                   <p>
-                    Amanah Protocol mengalirkan deposit pokok secara transparan ke pool likuiditas terisolasi (Solana Liquid Staking SOL / Kamino Lend) dengan jaminan keamanan modal 100%. Rumus kalkulasi hasil bunga modal:
+                    Parameter cashback prototipe dihitung dari nilai pembelian: pembayaran SOL mendapat 0,5% nilai pembelian dalam AMN, sedangkan pembayaran AMN mendapat 3% dari jumlah AMN yang dibayarkan. Cashback hanya dikreditkan saat penyelesaian pesanan pada simulasi. Persentase tersebut bukan yield, bukan jaminan imbal hasil, dan belum didukung treasury atau aturan token on-chain.
                   </p>
 
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs space-y-2 text-slate-200">
                     <div className="text-emerald-400 font-bold font-sans text-sm mb-1">
-                      Formula Distribusi Bunga Modal Terdesentralisasi:
+                      Parameter Cashback Pembelian (prototipe):
                     </div>
-                    <div>Y_total = Principal * APY * (Transit_Days / 365)</div>
-                    <div className="text-emerald-300">├── Y_buyer = 40% * Y_total (Cashback Loyalitas Pembeli dalam token AMN)</div>
-                    <div className="text-teal-300">├── Y_seller = 40% * Y_total (Bonus Ketepatan Waktu Penjual dalam SOL)</div>
-                    <div className="text-amber-300">└── Y_burn = 20% * Y_total (Alokasi Pembelian Kembali & Pembakaran $AMN On-Chain)</div>
+                    <div>Cashback_SOL = nilai_SOL × 0,5% dikonversi ke AMN memakai kurs simulasi</div>
+                    <div>Cashback_AMN = jumlah_AMN × 3%</div>
+                    <div className="text-amber-300">Kedua nilai baru diberikan jika pesanan selesai; refund tidak menghasilkan cashback pembelian.</div>
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-2">
                     3. Alur Mesin State (State Transition Machine)
                   </h3>
                   <p>
-                    State order mengikuti transisi ketat yang divalidasi oleh tanda tangan kriptografi (ed25519) dari masing-masing pihak:
+                    Transisi status yang direncanakan:
                   </p>
 
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-2">
                     <div className="flex items-center gap-2 text-slate-400">
                       <span className="text-white font-bold">[1] Draft</span>
-                      <span>──(Pembeli Deposit SOL)──&gt;</span>
-                      <span className="text-emerald-400 font-bold">[2] Funded & Yield Active</span>
+                      <span>──(Pembeli bayar SOL/AMN + fee SOL)──&gt;</span>
+                      <span className="text-emerald-400 font-bold">[2] Funded</span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-400">
                       <span className="text-emerald-400 font-bold">[2] Funded</span>
-                      <span>──(Penjual Kirim Resi)──&gt;</span>
-                      <span className="text-teal-400 font-bold">[3] Shipped with Proof</span>
+                      <span>──(Penjual konfirmasi dan kirim)──&gt;</span>
+                      <span className="text-teal-400 font-bold">[3] Confirmed / Shipped</span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-400">
                       <span className="text-teal-400 font-bold">[3] Shipped</span>
-                      <span>──(Barang Diterima)──&gt;</span>
-                      <span className="text-emerald-300 font-bold">[4] Completed + Yield Distributed</span>
+                      <span>──(Pembeli konfirmasi / penyelesaian sengketa)──&gt;</span>
+                      <span className="text-emerald-300 font-bold">[4] Completed + settlement</span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-400">
-                      <span className="text-rose-400 font-bold">[Batas Timeout Lewat]</span>
-                      <span>──(Auto-Refund Trigger)──&gt;</span>
-                      <span className="text-rose-300 font-bold">[5] Refunded 100% to Buyer</span>
+                      <span className="text-rose-400 font-bold">[Sengketa / deadline]</span>
+                      <span>──(otorisasi refund yang valid)──&gt;</span>
+                      <span className="text-rose-300 font-bold">[5] Refunded in original token</span>
                     </div>
                   </div>
+                  <p className="text-xs text-amber-300">
+                    Refund deadline pada blockchain tidak berjalan sendiri: transaksi harus dipicu dan program harus memverifikasi deadline serta akun penerima. Penggunaan yield vault berisiko kehilangan principal dan tidak termasuk implementasi prototipe.
+                  </p>
                 </div>
 
                 <div className="flex justify-between pt-4">
@@ -435,7 +388,7 @@ Pubkey::find_program_address(
                     onClick={() => setActiveSection('layer3')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Lanjut ke Layer 3: UMKM Gateway →
+                    Lanjut ke Pengalaman Pengguna →
                   </button>
                 </div>
               </article>
@@ -449,13 +402,13 @@ Pubkey::find_program_address(
                     Chapter 03 · Application Layer
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Layer 3: UMKM Gateway, Solana Blinks & Abstraksi Akun
+                    Pengalaman Pengguna, Bukti Pesanan & Integrasi
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Layer 3 menyelesaikan tantangan terbesar adopsi blockchain di Indonesia: <strong>kompleksitas antarmuka dan literasi Web3</strong>. Melalui abstraksi akun dan Solana Actions, UMKM dapat bertransaksi semudah berbelanja di aplikasi chat.
+                    Tujuan desain antarmuka adalah mengurangi kompleksitas penggunaan wallet dan membantu pihak-pihak memahami status pesanan. Fitur yang belum terhubung ke layanan atau program on-chain di bawah ini merupakan rancangan, bukan kemampuan produksi.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
@@ -465,7 +418,7 @@ Pubkey::find_program_address(
                         <span>Solana Blinks & Actions</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Penjual UMKM dapat membuat tautan pembayaran rekber satu-klik yang dapat disematkan langsung di WhatsApp, Instagram DM, atau Telegram. Konsumen dapat menyelesaikan transaksi escrow tanpa harus berpindah aplikasi.
+                        Tautan berbasis Solana Actions/Blinks dapat dipertimbangkan untuk memulai pembayaran dari platform lain. EscrowChain saat ini belum menyediakan endpoint Actions/Blinks, dan contoh URL di bawah bersifat ilustratif.
                       </p>
                     </div>
 
@@ -482,10 +435,10 @@ Pubkey::find_program_address(
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                       <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs">
                         <Coins className="w-4 h-4" />
-                        <span>Jembatan QRIS & Rupiah Gateway</span>
+                        <span>Fiat Gateway (rencana)</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Mendukung on-ramp dan off-ramp instan dari Rupiah (IDR) melalui QRIS Standar Bank Indonesia dan Virtual Account perbankan nasional langsung menjadi saldo Solana (SOL/USDC/AMN).
+                        Integrasi QRIS, virtual account, atau on/off-ramp dapat dievaluasi di masa depan melalui penyedia berizin. Fitur tersebut belum tersedia dan tidak ada koneksi langsung dari Rupiah ke saldo wallet pada prototipe.
                       </p>
                     </div>
 
@@ -495,27 +448,30 @@ Pubkey::find_program_address(
                         <span>Tribunal Pengadilan Arbitrase Multi-Sig</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Jika terjadi sengketa barang tidak sesuai atau rusak, panel validator independen (DAO Jurors) memeriksa bukti SHA-256 rekaman video unboxing dan memvoting resolusi secara on-chain.
+                        UI prototipe menyediakan alur komplain dan keputusan admin/tribunal yang disimulasikan. Bukti berkas perlu disimpan off-chain dengan kontrol akses; hash saja tidak membuktikan isi atau kebenaran bukti.
                       </p>
                     </div>
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    Spesifikasi Tindakan Solana Blink (URL Schema)
+                    Contoh payload konseptual (belum tersedia sebagai endpoint)
                   </h3>
                   <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto">
-{`GET https://amanah.escrow/api/actions/pay?order=101
+{`GET https://example.invalid/api/actions/pay?order=101
 Headers: "Accept: application/json"
 
 Response JSON:
 {
-  "icon": "https://amanah.escrow/assets/products/snapdragon8.jpg",
-  "title": "Beli Smartphone Flagship via Amanah Solana Escrow",
-  "description": "5.51 SOL dikunci di PDA Amanah. Bebas penipuan COD & yield 6.8% APY.",
-  "label": "Kunci Dana Escrow (5.51 SOL)",
+  "icon": "https://example.invalid/assets/product.jpg",
+  "title": "EscrowChain order payment",
+  "description": "Review order and escrow terms before signing.",
+  "label": "Review payment",
   "disabled": false
 }`}
                   </pre>
+                  <p className="text-xs text-amber-300">
+                    QRIS, virtual account, fiat on-ramp/off-ramp, wallet abstraction, dan integrasi marketplace tidak tersedia pada versi prototipe ini. Integrasi fiat membutuhkan penyedia layanan dan kepatuhan yang sesuai.
+                  </p>
                 </div>
 
                 <div className="flex justify-between pt-4">
@@ -529,7 +485,7 @@ Response JSON:
                     onClick={() => setActiveSection('tokenomics')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Lanjut ke Tokenomics ($AMN) →
+                    Lanjut ke Utilitas & Tokenomics AMN →
                   </button>
                 </div>
               </article>
@@ -543,36 +499,43 @@ Response JSON:
                     Chapter 04 · Token Architecture
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Tokenomics Amanah ($AMN): Distribusi, Utilitas & Deflasi
+                    Token Amanah ($AMN): Utilitas & Parameter Ekonomi Ilustratif
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Token Amanah ($AMN) adalah token standar SPL Solana dengan pasokan tetap 100.000.000 AMN yang berfungsi sebagai token utilitas, diskon biaya escrow, imbal hasil staking, dan tata kelola protokol.
+                    $AMN dirancang sebagai token utilitas pada ekosistem EscrowChain. Informasi mint, supply, dan distribusi berikut adalah parameter contoh dari data prototipe, belum diverifikasi melalui mint SPL on-chain, dan tidak menyatakan nilai pasar atau janji keuntungan.
                   </p>
+
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200 space-y-1">
+                    <div className="font-bold text-amber-300">Insentif pembelian pada prototipe</div>
+                    <div>Bayar SOL: cashback 0,5% dari nilai pembelian, dikonversi ke AMN menggunakan kurs simulasi.</div>
+                    <div>Bayar AMN: cashback 3% dari jumlah AMN yang dibayarkan.</div>
+                    <div>Cashback dikreditkan setelah pesanan selesai; gas fee jaringan tetap dibayar dalam SOL. Nilai ini dapat berubah sebelum peluncuran.</div>
+                  </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
                     <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-[11px] text-slate-400">Total Pasokan Maksimum</div>
-                      <div className="text-base font-bold font-mono text-white mt-0.5">100.000.000 AMN</div>
+                      <div className="text-[11px] text-slate-400">Pasokan Maksimum (contoh)</div>
+                      <div className="text-base font-bold font-mono text-white mt-0.5">{TOKENOMICS_INFO.totalSupply.toLocaleString('id-ID')} AMN</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-[11px] text-slate-400">Pasokan Beredar</div>
-                      <div className="text-base font-bold font-mono text-emerald-400 mt-0.5">42.150.000 AMN</div>
+                      <div className="text-base font-bold font-mono text-emerald-400 mt-0.5">{TOKENOMICS_INFO.circulatingSupply.toLocaleString('id-ID')} AMN</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-[11px] text-slate-400">Terkunci di Staking Pool</div>
-                      <div className="text-base font-bold font-mono text-teal-400 mt-0.5">28.500.000 AMN</div>
+                      <div className="text-base font-bold font-mono text-teal-400 mt-0.5">{TOKENOMICS_INFO.stakedSupply.toLocaleString('id-ID')} AMN</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-[11px] text-slate-400">Telah Dibakar (Burned)</div>
-                      <div className="text-base font-bold font-mono text-rose-400 mt-0.5">1.420.500 AMN</div>
+                      <div className="text-base font-bold font-mono text-rose-400 mt-0.5">{TOKENOMICS_INFO.totalBurned.toLocaleString('id-ID')} AMN</div>
                     </div>
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    Tabel Alokasi Pasokan Token ($AMN)
+                    Usulan Alokasi Pasokan ($AMN, belum ditetapkan on-chain)
                   </h3>
 
                   <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
@@ -582,7 +545,7 @@ Response JSON:
                           <th className="p-3">Kategori Alokasi</th>
                           <th className="p-3">Persentase</th>
                           <th className="p-3">Jumlah Token</th>
-                          <th className="p-3">Jadwal Vesting & Pelepasan</th>
+                          <th className="p-3">Catatan (usulan)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono text-slate-300">
@@ -626,15 +589,15 @@ Response JSON:
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="font-bold text-xs text-white">Tier Standard (0 AMN)</div>
-                      <div className="text-xs text-slate-400 mt-1">Biaya protokol rekber normal 0.5%, proteksi timelock aktif.</div>
+                        <div className="text-xs text-slate-400 mt-1">Rancangan biaya dasar; belum ditagihkan atau diterapkan on-chain.</div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="font-bold text-xs text-emerald-400">Tier Silver (1.000 AMN Staked)</div>
-                      <div className="text-xs text-slate-400 mt-1">Diskon biaya rekber 50%, lencana penjual terverifikasi on-chain.</div>
+                      <div className="text-xs text-slate-400 mt-1">Diskon dan lencana merchant masih usulan; perlu aturan eligibility yang dapat diverifikasi.</div>
                     </div>
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="font-bold text-xs text-amber-400">Tier Amanah VIP (5.000 AMN Staked)</div>
-                      <div className="text-xs text-slate-400 mt-1">0% Biaya Rekber (Gratis), prioritas arbitrase DAO, 11.2% Staking APR.</div>
+                      <div className="text-xs text-slate-400 mt-1">Fitur premium masih usulan. Tingkat imbal hasil tidak ditetapkan dan tidak dijamin.</div>
                     </div>
                   </div>
                 </div>
@@ -650,7 +613,7 @@ Response JSON:
                     onClick={() => setActiveSection('security')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Lanjut ke Security & Audit →
+                    Lanjut ke Keamanan & Risiko →
                   </button>
                 </div>
               </article>
@@ -661,46 +624,46 @@ Response JSON:
               <article className="space-y-6 animate-fade-in">
                 <div className="border-b border-slate-800 pb-4">
                   <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
-                    Chapter 05 · Smart Contract Formal Verification
+                    Chapter 05 · Security & Risk Model
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Arsitektur Keamanan & Invarian Anchor Program
+                    Batas Keamanan, Ancaman & Mitigasi yang Direncanakan
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Amanah Protocol mengadopsi prinsip <strong>Defense-in-Depth</strong> untuk mengeliminasi seluruh vektor serangan umum blockchain (reentrancy, integer overflow, flash loan exploits, dan unauthorized authority).
+                    Keamanan belum dapat diklaim terjamin hanya dari rancangan UI atau penggunaan Solana/Anchor. Sebelum escrow nyata, program harus ditulis, diuji, ditinjau secara independen, dan dikonfigurasi dengan otorisasi yang eksplisit. Risiko utama dan kontrol yang perlu diterapkan meliputi:
                   </p>
 
                   <div className="space-y-3">
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
                       <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Kekebalan Alami terhadap Reentrancy Attack</span>
+                        <span>Otorisasi dan penyalahgunaan akun</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Pada EVM, panggilan fungsi eksternal mentransfer kontrol eksekusi ke kontrak penerima sebelum state diperbarui. Pada Solana, model Sealevel memisahkan kode program dari data akun. Transfer lamports hanya terjadi melalui instruksi Cross-Program Invocation (CPI) dengan signed seeds internal, mencegah eksekusi ulang rekursif.
+                        Program perlu memvalidasi signer, owner akun, PDA seeds, token mint, token account, hubungan buyer/seller, serta state order pada setiap instruksi. Jangan mengandalkan nilai yang dikirim UI.
                       </p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
                       <div className="flex items-center gap-2 text-teal-400 font-bold text-xs">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Presisi Aritmatika Aman di Level Kompilasi LLVM</span>
+                        <span>Kesalahan state, aritmetika, dan token</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Rust secara default memicu <code>panic!()</code> saat terjadi arithmetic overflow atau underflow. Seluruh kalkulasi pembagian hasil yield DeFi menggunakan <code>checked_mul</code> dan <code>checked_div</code> dengan presisi 9 desimal (micro-lamports).
+                        Gunakan aritmetika checked, unit integer terkecil, batas nilai, dan pengujian invariant untuk mencegah overflow, rounding, double settlement, pembayaran token yang salah, atau refund berulang.
                       </p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
                       <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Circuit Breaker & Emergency Freeze</span>
+                        <span>Risiko eksternal dan respons insiden</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Program memiliki instruksi pemutus arus darurat yang dikendalikan oleh Multi-Sig Treasury 3-dari-5. Jika terdeteksi anomali pada protokol DeFi mitra, fungsi deposit dapat dibekukan seketika tanpa mempengaruhi kemampuan pengguna menarik dana pokok mereka.
+                        Risiko meliputi kegagalan RPC/wallet, kunci admin bocor, token mint palsu, bug program, gangguan jaringan, oracle/kurs yang salah, serta kerugian pada protokol yield pihak ketiga. Kebijakan pause, multisig, monitoring, dan prosedur pemulihan masih harus dirancang serta diuji.
                       </p>
                     </div>
                   </div>
@@ -711,7 +674,7 @@ Response JSON:
                       className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-emerald-300 rounded-lg transition-colors cursor-pointer flex items-center gap-2"
                     >
                       <Lock className="w-4 h-4 text-emerald-400" />
-                      <span>Lihat Kode Sumber Lengkap Anchor lib.rs & Audit Log →</span>
+                      <span>Lihat ilustrasi kode & alur teknis (bukan audit) →</span>
                     </button>
                   </div>
                 </div>
@@ -727,7 +690,7 @@ Response JSON:
                     onClick={() => setActiveSection('governance')}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Lanjut ke DAO & Roadmap →
+                    Lanjut ke Tata Kelola & Roadmap →
                   </button>
                 </div>
               </article>
@@ -738,43 +701,47 @@ Response JSON:
               <article className="space-y-6 animate-fade-in">
                 <div className="border-b border-slate-800 pb-4">
                   <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
-                    Chapter 06 · Evolution & Future
+                    Chapter 06 · Governance & Roadmap
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    Tata Kelola DAO, Roadmap Pengembangan & Provenansi Riset
+                    Tata Kelola, Tahapan Pengembangan & Riset
                   </h1>
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    Amanah Protocol bertransisi menuju desentralisasi penuh di mana parameter protokol (besaran alokasi yield, strategi liquidity pool baru, dan standar bukti kurir) ditentukan melalui voting DAO pemegang st-AMN.
+                    DAO merupakan arah tata kelola yang diusulkan, bukan organisasi atau kontrak voting yang sudah aktif. Perubahan parameter keuangan harus disertai batas risiko, transparansi, masa jeda, dan mekanisme darurat; kepemilikan token saja tidak membuktikan hak tata kelola saat ini.
                   </p>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    Roadmap Strategis Protokol (2026 - 2027)
+                    Tahapan pengembangan (target, bukan komitmen tanggal)
                   </h3>
 
                   <div className="space-y-3 font-mono text-xs">
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-emerald-400 font-bold font-sans">Q1 - Q2 2026 · Foundation & Deployment</div>
+                      <div className="text-emerald-400 font-bold font-sans">Tahap 1 · Validasi desain</div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Audit formal smart contract Solana Anchor, peluncuran testnet Devnet, integrasi percontohan 500 penjual gadget & laptop UMKM di Yogyakarta dan Jakarta.
+                        Tetapkan aturan state machine, format IDL, struktur akun, kebijakan biaya, refund, dan kebutuhan kepatuhan. Validasi melalui test cases sebelum menerima aset nyata.
                       </div>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-teal-400 font-bold font-sans">Q3 - Q4 2026 · DeFi Yield Expansion & Blinks</div>
+                      <div className="text-teal-400 font-bold font-sans">Tahap 2 · Devnet dan pengujian</div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Aktivasi modul Solana Blinks untuk WhatsApp Commerce, ekspansi yield vault ke Marinade dan Kamino, peluncuran portal arbitrase multi-sig publik.
+                        Implementasikan wallet signing dan program escrow di Devnet; uji deposit kedua token, stok, penyelesaian, timeout, refund, konflik, dan retry. Jangan sambungkan DeFi yield pada tahap awal.
                       </div>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-indigo-400 font-bold font-sans">2027 · Cross-Border Southeast Asia Escrow</div>
+                      <div className="text-indigo-400 font-bold font-sans">Tahap 3 · Review dan pilot terbatas</div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Ekspansi rekening bersama lintas negara untuk ekspor kerajinan & komoditas UMKM Indonesia ke pasar ASEAN dengan multi-currency settlement (SOL, USDC, AMN).
+                        Lakukan review keamanan independen, perbaiki temuan, siapkan monitoring dan proses insiden, lalu pilot dengan batas nominal sebelum mempertimbangkan mainnet.
                       </div>
                     </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200">
+                    Tokenomics, DAO, yield vault, Actions/Blinks, dan ekspansi lintas negara hanya dapat dipertimbangkan setelah implementasi inti, evaluasi hukum, audit, serta model operasionalnya tervalidasi.
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-4">
@@ -802,10 +769,144 @@ Response JSON:
                     ← Kembali ke Security
                   </button>
                   <button
+                    onClick={() => setActiveSection('status')}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                  >
+                    Lanjut ke Status Implementasi →
+                  </button>
+                </div>
+              </article>
+            )}
+
+            {activeSection === 'status' && (
+              <article className="space-y-6 animate-fade-in">
+                <div className="border-b border-slate-800 pb-4">
+                  <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
+                    Chapter 07 · Implementation Status
+                  </div>
+                  <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
+                    Status Implementasi, Asumsi & Batasan
+                  </h1>
+                </div>
+
+                <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
+                  <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40">
+                    <div className="font-bold text-amber-300">Status saat ini: prototipe UI dengan simulasi lokal.</div>
+                    <p className="text-xs text-amber-100 mt-1">
+                      Saldo, pembelian SOL/AMN, biaya transaksi yang ditampilkan, cashback, staking, yield, transaksi, dan sebagian alur governance dikelola sebagai data aplikasi. Signature simulasi bukan bukti transaksi pada explorer.
+                    </p>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-white">Belum tersedia untuk penggunaan aset nyata</h3>
+                  <ul className="list-disc list-inside space-y-2 text-xs">
+                    <li>Program escrow produksi, deployment yang dapat diverifikasi, IDL dan mint AMN resmi belum dikonfigurasi pada prototipe ini.</li>
+                    <li>Wallet signing dan transfer token on-chain belum menjadi bagian dari alur pembelian yang disimulasikan.</li>
+                    <li>Yield vault, oracle harga, QRIS/on-ramp, arbitrase DAO, dan mekanisme multisig tidak diaktifkan sebagai layanan nyata.</li>
+                    <li>Angka tokenomics, kurs, biaya, cashback, APY, dan jadwal roadmap adalah parameter contoh, bukan data pasar atau komitmen.</li>
+                  </ul>
+
+                  <h3 className="text-lg font-bold text-white">Kriteria sebelum mainnet</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      'Program Anchor dan IDL diverifikasi; unit, integration, dan invariant tests lulus.',
+                      'Audit/review independen selesai dan temuan kritis ditangani.',
+                      'Devnet menguji pembayaran SOL/AMN, refund token asli, timeout, stok, retry dan penolakan transaksi.',
+                      'Mint, authority, multisig, monitoring, incident response, dan recovery dipublikasikan.',
+                      'Biaya, aturan cashback, sumber pendanaan dan risiko dijelaskan kepada pengguna.',
+                      'Kelayakan hukum, perlindungan konsumen, privasi, dan kewajiban operasional dievaluasi.'
+                    ].map(item => (
+                      <div key={item} className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 inline mr-2" />
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs text-slate-400">
+                    Dokumen ini menjelaskan desain dan status kode yang tersedia, bukan jaminan keamanan, performa, hasil finansial, atau ketersediaan layanan.
+                  </p>
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <button
+                    onClick={() => setActiveSection('governance')}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs rounded-lg transition-colors cursor-pointer"
+                  >
+                    ← Kembali ke Roadmap
+                  </button>
+                  <button
+                    onClick={() => setActiveSection('references')}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                  >
+                    Referensi & Glosarium →
+                  </button>
+                </div>
+              </article>
+            )}
+
+            {activeSection === 'references' && (
+              <article className="space-y-6 animate-fade-in">
+                <div className="border-b border-slate-800 pb-4">
+                  <div className="text-xs font-mono text-emerald-400 uppercase tracking-wider">
+                    Chapter 08 · References
+                  </div>
+                  <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
+                    Referensi, Glosarium & Disclaimer
+                  </h1>
+                </div>
+
+                <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
+                  <h3 className="text-lg font-bold text-white">Referensi teknis</h3>
+                  <ol className="list-decimal list-inside space-y-3 text-xs">
+                    <li>
+                      <a className="text-emerald-300 hover:text-emerald-200 underline" href="https://docs.axelar.dev/infrastructure" target="_blank" rel="noreferrer">
+                        Axelar Documentation — Infrastructure Overview
+                      </a>
+                      <span className="text-slate-400">. Acuan publik untuk organisasi dokumentasi protokol (overview, arsitektur, keamanan/verifikasi, protokol aplikasi, dan bagian referensi). EscrowChain tidak menggunakan atau mengklaim integrasi Axelar.</span>
+                    </li>
+                    <li>
+                      <a className="text-emerald-300 hover:text-emerald-200 underline" href="https://solana.com/docs" target="_blank" rel="noreferrer">
+                        Solana Documentation
+                      </a>
+                      <span className="text-slate-400">. Referensi primer untuk transaksi, akun, program, jaringan, dan wallet Solana.</span>
+                    </li>
+                    <li>
+                      <a className="text-emerald-300 hover:text-emerald-200 underline" href="https://www.anchor-lang.com/docs" target="_blank" rel="noreferrer">
+                        Anchor Documentation
+                      </a>
+                      <span className="text-slate-400">. Referensi framework untuk membangun, menguji, dan berinteraksi dengan program Solana.</span>
+                    </li>
+                  </ol>
+
+                  <h3 className="text-lg font-bold text-white pt-3">Glosarium</h3>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800"><dt className="font-bold text-white">Escrow</dt><dd className="text-slate-400 mt-1">Dana yang ditahan dengan aturan pelepasan atau refund tertentu.</dd></div>
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800"><dt className="font-bold text-white">PDA</dt><dd className="text-slate-400 mt-1">Program Derived Address; alamat akun yang diturunkan secara deterministik dari program dan seeds.</dd></div>
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800"><dt className="font-bold text-white">IDL</dt><dd className="text-slate-400 mt-1">Interface Description Language, deskripsi antarmuka program untuk client.</dd></div>
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800"><dt className="font-bold text-white">AMN</dt><dd className="text-slate-400 mt-1">Token utilitas yang direncanakan untuk ekosistem EscrowChain; status mint perlu diverifikasi.</dd></div>
+                  </dl>
+
+                  <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-2">
+                    <div className="font-bold text-slate-200">Disclaimer</div>
+                    <p>
+                      Whitepaper ini adalah dokumen desain/prototipe untuk tujuan informasi dan pendidikan. Isinya bukan nasihat investasi, hukum, pajak, atau keuangan; bukan penawaran token; dan tidak menjamin keamanan, likuiditas, harga, APY, cashback, atau pengembalian dana. Penggunaan blockchain memiliki risiko kehilangan aset, kesalahan pengguna, kerentanan program, volatilitas token, dan gangguan jaringan. Periksa deployment dan konfigurasi resmi secara mandiri sebelum berinteraksi dengan aset nyata.
+                    </p>
+                    <p>Referensi pihak ketiga ditautkan untuk konteks teknis; isi dan perubahan dokumen tersebut berada di luar kendali EscrowChain.</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between pt-4">
+                  <button
+                    onClick={() => setActiveSection('status')}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs rounded-lg transition-colors cursor-pointer"
+                  >
+                    ← Kembali ke Status
+                  </button>
+                  <button
                     onClick={onBackToApp}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer"
                   >
-                    Buka dApp Workspace Sekarang →
+                    Kembali ke aplikasi →
                   </button>
                 </div>
               </article>

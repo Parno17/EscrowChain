@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { SOL_IDR_RATE, AMN_IDR_RATE, SOL_TO_AMN_RATE } from '../data/mockData';
+import { SOL_IDR_RATE, AMN_IDR_RATE, SOL_TO_AMN_RATE, SOLANA_GAS_FEE_SOL } from '../data/mockData';
 import { AMNTokenLogo } from './EscrowChainLogo';
 import {
   Coins,
@@ -60,20 +60,27 @@ export const TokenTopupModal: React.FC<TokenTopupModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   const selectedPkg = selectedPackage !== null ? TOPUP_PACKAGES[selectedPackage] : null;
-  const customAmn = parseFloat(customAmnAmount) || 0;
-  const customSolCost = +(customAmn / SOL_TO_AMN_RATE).toFixed(4);
+  const parsedCustomAmn = Number(customAmnAmount);
+  const customAmn = Number.isFinite(parsedCustomAmn) ? parsedCustomAmn : 0;
+  const customSolCost = +(customAmn / SOL_TO_AMN_RATE).toFixed(9);
 
   const finalAmn = selectedPkg ? selectedPkg.amn : customAmn;
   const finalSol = selectedPkg ? selectedPkg.solCost : customSolCost;
-  const canAfford = activeAccount.balanceSol >= finalSol;
+  const totalSolCost = +(finalSol + SOLANA_GAS_FEE_SOL).toFixed(9);
+  const canAfford = activeAccount.balanceSol >= totalSolCost;
 
   const handleTopup = async () => {
-    if (!finalAmn || finalAmn <= 0 || !canAfford) return;
+    if (!Number.isFinite(finalAmn) || finalAmn <= 0 || !canAfford) return;
     setIsLoading(true);
-    await topupAmnToken(finalAmn, finalSol);
-    setIsLoading(false);
-    setSelectedPackage(null);
-    setCustomAmnAmount('');
+    try {
+      const result = await topupAmnToken(finalAmn, finalSol);
+      if (result.success) {
+        setSelectedPackage(null);
+        setCustomAmnAmount('');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDistribute = async () => {
@@ -148,7 +155,7 @@ export const TokenTopupModal: React.FC<TokenTopupModalProps> = ({ isOpen, onClos
             <div className="space-y-4">
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-start gap-2">
                 <Zap className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>Beli token AMN dengan SOL. Semakin banyak AMN di-stake, semakin besar diskon biaya rekber dan hak suara DAO.</span>
+                <span>Mode simulasi: beli AMN dengan SOL dan saldo akun lokal akan diperbarui; belum ada transaksi on-chain. Semakin banyak AMN di-stake, semakin besar diskon biaya rekber dan hak suara DAO.</span>
               </div>
 
               {/* Paket */}
@@ -218,7 +225,11 @@ export const TokenTopupModal: React.FC<TokenTopupModalProps> = ({ isOpen, onClos
                   </div>
                   <div className="flex justify-between text-xs border-t border-slate-800 pt-2">
                     <span className="text-slate-400">Gas Fee Solana:</span>
-                    <span className="text-emerald-400 font-mono">~0.000005 SOL (Rp 12)</span>
+                    <span className="text-emerald-400 font-mono">{SOLANA_GAS_FEE_SOL} SOL (Rp {(SOLANA_GAS_FEE_SOL * SOL_IDR_RATE).toLocaleString('id-ID')})</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-slate-300">Total potongan saldo:</span>
+                    <span className="text-white font-mono">{totalSolCost} SOL</span>
                   </div>
                   {!canAfford && (
                     <div className="flex items-center gap-1.5 text-rose-400 text-[11px] font-medium">
@@ -231,13 +242,13 @@ export const TokenTopupModal: React.FC<TokenTopupModalProps> = ({ isOpen, onClos
 
               <button
                 onClick={handleTopup}
-                disabled={isLoading || !finalAmn || finalAmn <= 0 || !canAfford}
+                disabled={isLoading || !Number.isFinite(finalAmn) || finalAmn <= 0 || !canAfford}
                 className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isLoading ? (
-                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Memproses Transaksi Solana...</>
+                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Memproses simulasi top-up...</>
                 ) : (
-                  <><ArrowDownToLine className="w-3.5 h-3.5" /> Beli {finalAmn ? `${finalAmn.toLocaleString()} AMN` : 'AMN'} Sekarang →</>
+                  <><ArrowDownToLine className="w-3.5 h-3.5" /> Simulasikan top-up {finalAmn ? `${finalAmn.toLocaleString()} AMN` : 'AMN'} →</>
                 )}
               </button>
             </div>

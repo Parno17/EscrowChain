@@ -8,7 +8,8 @@ import {
   UserAuth, 
   ElectronicProduct,
   InitiatorType,
-  TokenomicsMetric 
+  TokenomicsMetric,
+  PaymentToken
 } from '../types/escrow';
 import { 
   PRESET_ACCOUNTS, 
@@ -24,6 +25,19 @@ import {
   TOKENOMICS_INFO,
   DEFI_YIELD_VAULT_PDA
 } from '../data/mockData';
+
+const getOrderPaymentToken = (order: EscrowOrder): PaymentToken => order.paymentToken ?? 'SOL';
+
+const getOrderPaymentAmount = (order: EscrowOrder): number =>
+  order.paymentAmount ?? (getOrderPaymentToken(order) === 'AMN' ? order.amountAmn : order.amountSol);
+
+const adjustOrderPaymentBalance = (account: Web3Account, order: EscrowOrder, direction: 1 | -1): Web3Account => {
+  const amount = getOrderPaymentAmount(order) * direction;
+  if (getOrderPaymentToken(order) === 'AMN') {
+    return { ...account, balanceAmn: +(account.balanceAmn + amount).toFixed(2) };
+  }
+  return { ...account, balanceSol: +(account.balanceSol + amount).toFixed(9) };
+};
 
 interface Web3ContextType {
   orders: EscrowOrder[];
@@ -69,6 +83,8 @@ interface Web3ContextType {
     variation: string;
     quantity: number;
     amountSol: number;
+    amountAmn: number;
+    paymentToken: PaymentToken;
     sellerAddress: string;
     notes?: string;
   }) => Promise<{ success: boolean; orderId?: number; txHash?: string; error?: string }>;
@@ -505,6 +521,8 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     variation: string;
     quantity: number;
     amountSol: number;
+    amountAmn: number;
+    paymentToken: PaymentToken;
     sellerAddress: string;
     notes?: string;
   }) => {
@@ -513,9 +531,31 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, error: 'Circuit breaker active' };
     }
 
-    if (activeAccount.balanceSol < params.amountSol) {
-      showNotification('error', `Saldo SOL tidak cukup. Dibutuhkan ${params.amountSol} SOL, saldo saat ini ${activeAccount.balanceSol.toFixed(2)} SOL.`);
+    const product = products.find(item => item.id === params.productId);
+    if (params.productId !== 'custom-buyer' &&
+      (!product || product.isAvailable === false || params.quantity <= 0 || !Number.isInteger(params.quantity) || params.quantity > product.stock)) {
+      showNotification('error', 'Produk tidak tersedia atau stok tidak mencukupi.');
+      return { success: false, error: 'Product unavailable or insufficient stock' };
+    }
+
+    if (!Number.isFinite(params.amountSol) || params.amountSol <= 0 || !Number.isFinite(params.amountAmn) || params.amountAmn <= 0) {
+      showNotification('error', 'Nilai pembayaran tidak valid.');
+      return { success: false, error: 'Invalid payment amount' };
+    }
+
+    if (activeAccount.balanceSol < SOLANA_GAS_FEE_SOL) {
+      showNotification('error', `Saldo SOL tidak cukup untuk membayar gas fee ${SOLANA_GAS_FEE_SOL} SOL.`);
+      return { success: false, error: 'Insufficient SOL for network fee' };
+    }
+
+    if (params.paymentToken === 'SOL' && activeAccount.balanceSol < params.amountSol + SOLANA_GAS_FEE_SOL) {
+      showNotification('error', `Saldo SOL tidak cukup. Dibutuhkan ${(params.amountSol + SOLANA_GAS_FEE_SOL).toFixed(9)} SOL termasuk gas fee.`);
       return { success: false, error: 'Insufficient SOL' };
+    }
+
+    if (params.paymentToken === 'AMN' && activeAccount.balanceAmn < params.amountAmn) {
+      showNotification('error', `Saldo AMN tidak cukup. Dibutuhkan ${params.amountAmn.toLocaleString()} AMN, saldo saat ini ${activeAccount.balanceAmn.toLocaleString()} AMN.`);
+      return { success: false, error: 'Insufficient AMN' };
     }
 
     const orderId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 101;
@@ -526,8 +566,14 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const deadlineDays = 4;
     const deadlineTimestamp = currentSimulatedTime + deadlineDays * 86400000;
     const deadlineSlot = currentSlot + deadlineDays * 216000;
-    const amountAmn = Math.round(params.amountSol * SOL_TO_AMN_RATE);
+    const amountAmn = Math.round(params.amountAmn);
     const amountIdr = Math.round(params.amountSol * SOL_IDR_RATE);
+    const paymentAmount = params.paymentToken === 'AMN' ? params.amountAmn : params.amountSol;
+    const purchaseCashbackAmn = +(
+      params.paymentToken === 'AMN'
+        ? params.amountAmn * 0.03
+        : (params.amountSol * SOL_IDR_RATE * 0.005) / AMN_IDR_RATE
+    ).toFixed(2);
 
     const newOrder: EscrowOrder = {
       id: orderId,
@@ -541,6 +587,9 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       amountSol: params.amountSol,
       amountAmn,
       amountIdr,
+      paymentToken: params.paymentToken,
+      paymentAmount,
+      purchaseCashbackAmn,
       gasFeeSol: SOLANA_GAS_FEE_SOL,
       gasSavedComparedToEthIdr: ETH_EQUIVALENT_GAS_IDR - Math.round(SOLANA_GAS_FEE_SOL * SOL_IDR_RATE),
       isDefiYieldActive: true,
@@ -564,7 +613,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       selectedVariation: params.variation,
       quantity: params.quantity,
       adminHeldTokenStatus: 'HELD_IN_PDA',
-      adminNotes: `Dana ${params.amountSol} SOL dikunci di PDA [b"escrow", ${orderId}]. Kamino Yield Vault aktif (6.8% APY).`,
+      adminNotes: `Dana ${paymentAmount} ${params.paymentToken} dikunci di PDA [b"escrow", ${orderId}]. Kamino Yield Vault aktif (6.8% APY).`,
       createdAt: currentSimulatedTime,
       txHashCreated: txHash,
       txHistory: [
@@ -576,26 +625,36 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'initialize_escrow_pda',
           from: activeAccount.address,
           to: pdaAddress,
-          valueSol: params.amountSol,
+          valueSol: params.paymentToken === 'SOL' ? params.amountSol : 0,
           timestamp: currentSimulatedTime,
           statusFrom: OrderStatus.Draft,
           statusTo: OrderStatus.Funded,
-          note: `Pembeli mendepositkan ${params.amountSol} SOL ke PDA Escrow. Gas fee 0.000005 SOL.`
+          note: `Pembeli membayar ${paymentAmount} ${params.paymentToken} ke PDA Escrow. Cashback pembelian ${purchaseCashbackAmn} AMN (${params.paymentToken === 'AMN' ? '3%' : '0.5%'}). Gas fee ${SOLANA_GAS_FEE_SOL} SOL.`
         }
       ]
     };
 
-    // Deduct SOL from buyer
-    setActiveAccountState(prev => ({
+    setActiveAccountState(prev => adjustOrderPaymentBalance({
       ...prev,
-      balanceSol: +(prev.balanceSol - params.amountSol).toFixed(4)
-    }));
+      balanceSol: +(prev.balanceSol - SOLANA_GAS_FEE_SOL).toFixed(9)
+    }, newOrder, -1));
+    setAllAccounts(prev => prev.map(account => account.address.toLowerCase() === activeAccount.address.toLowerCase()
+      ? adjustOrderPaymentBalance({
+          ...account,
+          balanceSol: +(account.balanceSol - SOLANA_GAS_FEE_SOL).toFixed(9)
+        }, newOrder, -1)
+      : account));
+    if (product) {
+      setProducts(prev => prev.map(item => item.id === product.id
+        ? { ...item, stock: item.stock - params.quantity, isAvailable: item.stock - params.quantity > 0 }
+        : item));
+    }
 
     setOrders(prev => [newOrder, ...prev]);
 
     showNotification(
       'success',
-      `Pesanan #${orderId} berhasil dibuat! ${params.amountSol} SOL dikunci di Solana PDA Vault. Biaya gas hanya Rp 12!`,
+      `Pesanan #${orderId} berhasil dibuat! ${paymentAmount} ${params.paymentToken} dikunci di Solana PDA Vault. Cashback ${purchaseCashbackAmn} AMN (${params.paymentToken === 'AMN' ? '3%' : '0.5%'}) diterima setelah pesanan selesai.`,
       txHash
     );
 
@@ -656,11 +715,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'seller_report_unavailable',
           from: activeAccount.address,
           to: order.pdaAddress,
-          valueSol: order.amountSol,
+          valueSol: getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0,
           timestamp: currentSimulatedTime,
           statusFrom: order.status,
           statusTo: OrderStatus.Refunded,
-          note: `Penjual membatalkan: "${reason}". Dana ${order.amountSol} SOL dikembalikan ke pembeli.`
+          note: `Penjual membatalkan: "${reason}". Dana ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} dikembalikan ke pembeli.`
         }
       ]
     };
@@ -668,17 +727,17 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Return funds to buyer
     setAllAccounts(prev => prev.map(acc => {
       if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
-        return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+        return adjustOrderPaymentBalance(acc, order, 1);
       }
       return acc;
     }));
 
     if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
-      setActiveAccountState(prev => ({ ...prev, balanceSol: +(prev.balanceSol + order.amountSol).toFixed(4) }));
+      setActiveAccountState(prev => adjustOrderPaymentBalance(prev, order, 1));
     }
 
     setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
-    showNotification('info', `Barang tidak tersedia. ${order.amountSol} SOL langsung dikembalikan ke pembeli!`, txHash);
+    showNotification('info', `Barang tidak tersedia. ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} langsung dikembalikan ke pembeli!`, txHash);
     return { success: true, txHash };
   };
 
@@ -733,7 +792,9 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const yieldSol = +((order.amountSol * (order.apyPercent / 100) * (transitDays / 365))).toFixed(5);
     const yieldAmn = +(yieldSol * SOL_TO_AMN_RATE).toFixed(2);
 
-    const buyerYieldShare = +(yieldAmn * 0.40).toFixed(2);   // 40% loyalty cashback
+    const yieldBuyerShare = +(yieldAmn * 0.40).toFixed(2);
+    const purchaseCashbackAmn = order.purchaseCashbackAmn || 0;
+    const buyerYieldShare = +(yieldBuyerShare + purchaseCashbackAmn).toFixed(2);
     const sellerYieldShare = +(yieldSol * 0.40).toFixed(5);  // 40% seller fulfillment bonus in SOL
     const burnAmnShare = +(yieldAmn * 0.20).toFixed(2);      // 20% burned protocol
 
@@ -758,11 +819,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'confirm_received_and_distribute_yield',
           from: activeAccount.address,
           to: order.pdaAddress,
-          valueSol: order.amountSol,
+          valueSol: getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0,
           timestamp: currentSimulatedTime,
           statusFrom: order.status,
           statusTo: OrderStatus.Completed,
-          note: `Pelepasan Sukses: ${order.amountSol} SOL pokok + ${sellerYieldShare} SOL bonus yield ke penjual. Pembeli dapat cashback ${buyerYieldShare} AMN. Dibakar ${burnAmnShare} AMN.`
+          note: `Pelepasan Sukses: ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} pokok ke penjual. Cashback pembelian ${purchaseCashbackAmn} AMN + cashback yield ${yieldBuyerShare} AMN. Dibakar ${burnAmnShare} AMN.`
         }
       ]
     };
@@ -771,8 +832,9 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setAllAccounts(prev => prev.map(acc => {
       if (acc.address.toLowerCase() === order.seller.toLowerCase()) {
         return {
-          ...acc,
-          balanceSol: +(acc.balanceSol + order.amountSol + sellerYieldShare).toFixed(4),
+          ...adjustOrderPaymentBalance(acc, order, 1),
+          balanceSol: +(acc.balanceSol + (getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0) + sellerYieldShare).toFixed(9),
+          balanceAmn: +(acc.balanceAmn + (getOrderPaymentToken(order) === 'AMN' ? getOrderPaymentAmount(order) : 0)).toFixed(2),
           reputationScore: Math.min(100, acc.reputationScore + 1)
         };
       }
@@ -786,10 +848,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
 
     if (activeAccount.address.toLowerCase() === order.seller.toLowerCase()) {
-      setActiveAccountState(prev => ({
-        ...prev,
-        balanceSol: +(prev.balanceSol + order.amountSol + sellerYieldShare).toFixed(4)
-      }));
+      setActiveAccountState(prev => {
+        const credited = adjustOrderPaymentBalance(prev, order, 1);
+        return { ...credited, balanceSol: +(credited.balanceSol + sellerYieldShare).toFixed(9) };
+      });
     } else if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
       setActiveAccountState(prev => ({
         ...prev,
@@ -807,7 +869,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
     showNotification(
       'success',
-      `Pesanan #${orderId} Selesai! ${order.amountSol} SOL dilepas ke Penjual + Anda menerima cashback ${buyerYieldShare} AMN!`,
+      `Pesanan #${orderId} Selesai! Dana ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} dilepas ke Penjual + Anda menerima cashback ${buyerYieldShare} AMN!`,
       txHash
     );
 
@@ -880,11 +942,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'claim_auto_refund_timeout',
           from: activeAccount.address,
           to: order.pdaAddress,
-          valueSol: order.amountSol,
+          valueSol: getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0,
           timestamp: currentSimulatedTime,
           statusFrom: order.status,
           statusTo: OrderStatus.Refunded,
-          note: `Proteksi Auto-Refund Solana: Batas waktu lewat tanpa pengiriman. ${order.amountSol} SOL kembali ke pembeli.`
+          note: `Proteksi Auto-Refund Solana: Batas waktu lewat tanpa pengiriman. ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} kembali ke pembeli.`
         }
       ]
     };
@@ -892,17 +954,17 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Return funds
     setAllAccounts(prev => prev.map(acc => {
       if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
-        return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+        return adjustOrderPaymentBalance(acc, order, 1);
       }
       return acc;
     }));
 
     if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
-      setActiveAccountState(prev => ({ ...prev, balanceSol: +(prev.balanceSol + order.amountSol).toFixed(4) }));
+      setActiveAccountState(prev => adjustOrderPaymentBalance(prev, order, 1));
     }
 
     setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
-    showNotification('success', `Auto-Refund Berhasil! ${order.amountSol} SOL dikembalikan ke dompet pembeli secara otomatis.`, txHash);
+    showNotification('success', `Auto-Refund Berhasil! ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} dikembalikan ke dompet pembeli secara otomatis.`, txHash);
     return { success: true, txHash };
   };
 
@@ -1000,18 +1062,23 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // ── Top Up AMN dengan SOL ──────────────────────────────────────────────────
   const topupAmnToken = async (amountAmn: number, costSol: number): Promise<{ success: boolean; txHash?: string }> => {
-    if (activeAccount.balanceSol < costSol) {
-      showNotification('error', 'Saldo SOL tidak mencukupi untuk membeli AMN.');
+    if (!Number.isFinite(amountAmn) || amountAmn <= 0 || !Number.isFinite(costSol) || costSol <= 0) {
+      showNotification('error', 'Jumlah AMN atau biaya top-up tidak valid.');
+      return { success: false };
+    }
+    const totalSolCost = +(costSol + SOLANA_GAS_FEE_SOL).toFixed(9);
+    if (activeAccount.balanceSol < totalSolCost) {
+      showNotification('error', 'Saldo SOL tidak mencukupi untuk top-up AMN dan gas fee.');
       return { success: false };
     }
     await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
     setActiveAccountState(prev => ({
       ...prev,
-      balanceSol: +(prev.balanceSol - costSol - 0.000005).toFixed(4),
+      balanceSol: +(prev.balanceSol - totalSolCost).toFixed(9),
       balanceAmn: +(prev.balanceAmn + amountAmn)
     }));
     const txHash = generateSolanaTxSignature();
-    showNotification('success', `Top Up Berhasil! +${amountAmn.toLocaleString()} AMN diterima. Dibayar: ${costSol} SOL.`, txHash);
+    showNotification('success', `Simulasi top-up berhasil! +${amountAmn.toLocaleString()} AMN diterima. Potongan: ${totalSolCost} SOL termasuk gas fee.`, txHash);
     return { success: true, txHash };
   };
 
@@ -1049,11 +1116,17 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const adminReleaseFundsToSeller = async (orderId: number, adminNotes?: string) => {
     const order = getOrderById(orderId);
     if (!order) return { success: false, error: 'Order not found' };
+    if (order.status === OrderStatus.Completed || order.status === OrderStatus.Refunded) {
+      showNotification('error', 'Pesanan ini sudah diselesaikan dan tidak dapat diselesaikan kembali.');
+      return { success: false, error: 'Order already settled' };
+    }
 
     const txHash = generateSolanaTxSignature();
+    const purchaseCashbackAmn = order.purchaseCashbackAmn || 0;
     const updatedOrder: EscrowOrder = {
       ...order,
       status: OrderStatus.Completed,
+      buyerYieldShare: purchaseCashbackAmn,
       adminHeldTokenStatus: 'RELEASED_TO_SELLER',
       adminNotes: adminNotes || 'Otoritas Admin Escrow melepas dana ke Penjual setelah pemeriksaan validasi.',
       adminReleasedAt: currentSimulatedTime,
@@ -1068,30 +1141,40 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'confirm_received_and_distribute_yield',
           from: activeAccount.address,
           to: order.pdaAddress,
-          valueSol: order.amountSol,
+          valueSol: getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0,
           timestamp: currentSimulatedTime,
           statusFrom: order.status,
           statusTo: OrderStatus.Completed,
-          note: `Admin Protocol melepas ${order.amountSol} SOL ke Penjual (${order.seller.slice(0, 8)}...).`
+          note: `Admin Protocol melepas ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} ke Penjual (${order.seller.slice(0, 8)}...). Cashback pembeli ${purchaseCashbackAmn} AMN.`
         }
       ]
     };
 
     setAllAccounts(prev => prev.map(acc => {
       if (acc.address.toLowerCase() === order.seller.toLowerCase()) {
-        return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+        return adjustOrderPaymentBalance(acc, order, 1);
+      }
+      if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
+        return { ...acc, balanceAmn: +(acc.balanceAmn + purchaseCashbackAmn).toFixed(2) };
       }
       return acc;
     }));
+    if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
+      setActiveAccountState(prev => ({ ...prev, balanceAmn: +(prev.balanceAmn + purchaseCashbackAmn).toFixed(2) }));
+    }
 
     setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
-    showNotification('success', `Admin berhasil melepas dana ${order.amountSol} SOL ke Penjual!`, txHash);
+    showNotification('success', `Admin melepas dana ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} ke Penjual. Cashback ${purchaseCashbackAmn} AMN dikreditkan ke pembeli.`, txHash);
     return { success: true, txHash };
   };
 
   const adminReleaseRefundToBuyer = async (orderId: number, adminNotes?: string) => {
     const order = getOrderById(orderId);
     if (!order) return { success: false, error: 'Order not found' };
+    if (order.status === OrderStatus.Completed || order.status === OrderStatus.Refunded) {
+      showNotification('error', 'Pesanan ini sudah diselesaikan dan tidak dapat diselesaikan kembali.');
+      return { success: false, error: 'Order already settled' };
+    }
 
     const txHash = generateSolanaTxSignature();
     const updatedOrder: EscrowOrder = {
@@ -1111,28 +1194,28 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           method: 'claim_auto_refund_timeout',
           from: activeAccount.address,
           to: order.pdaAddress,
-          valueSol: order.amountSol,
+          valueSol: getOrderPaymentToken(order) === 'SOL' ? getOrderPaymentAmount(order) : 0,
           timestamp: currentSimulatedTime,
           statusFrom: order.status,
           statusTo: OrderStatus.Refunded,
-          note: `Admin Protocol menyetujui refund: ${order.amountSol} SOL dikembalikan ke Pembeli.`
+          note: `Admin Protocol menyetujui refund: ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} dikembalikan ke Pembeli.`
         }
       ]
     };
 
     setAllAccounts(prev => prev.map(acc => {
       if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
-        return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+        return adjustOrderPaymentBalance(acc, order, 1);
       }
       return acc;
     }));
 
     if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
-      setActiveAccountState(prev => ({ ...prev, balanceSol: +(prev.balanceSol + order.amountSol).toFixed(4) }));
+      setActiveAccountState(prev => adjustOrderPaymentBalance(prev, order, 1));
     }
 
     setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
-    showNotification('success', `Admin mengonfirmasi pengembalian dana: ${order.amountSol} SOL berhasil di-refund ke dompet Pembeli!`, txHash);
+    showNotification('success', `Admin mengonfirmasi pengembalian dana: ${getOrderPaymentAmount(order)} ${getOrderPaymentToken(order)} berhasil dikembalikan ke dompet Pembeli!`, txHash);
     return { success: true, txHash };
   };
 
@@ -1159,6 +1242,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const adminVoteDisputeTribunal = async (orderId: number, judgeName: string, vote: 'release_to_seller' | 'refund_to_buyer') => {
     const order = getOrderById(orderId);
     if (!order) return { success: false };
+    if (order.status === OrderStatus.Completed || order.status === OrderStatus.Refunded) {
+      showNotification('error', 'Pesanan ini sudah diselesaikan dan tidak dapat menerima keputusan tribunal baru.');
+      return { success: false };
+    }
 
     const txHash = generateSolanaTxSignature();
     const existingVotes = order.tribunalVotes || [];
@@ -1176,20 +1263,27 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (sellerVotes >= 2) {
       updatedOrder.status = OrderStatus.Completed;
       updatedOrder.adminHeldTokenStatus = 'RELEASED_TO_SELLER';
+      updatedOrder.buyerYieldShare = order.purchaseCashbackAmn || 0;
       updatedOrder.resolutionNotes = `Tribunal Multi-Sig memutuskan memenangkan Penjual (${sellerVotes} dari 3 suara).`;
       setAllAccounts(prev => prev.map(acc => {
         if (acc.address.toLowerCase() === order.seller.toLowerCase()) {
-          return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+          return adjustOrderPaymentBalance(acc, order, 1);
+        }
+        if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
+          return { ...acc, balanceAmn: +(acc.balanceAmn + (order.purchaseCashbackAmn || 0)).toFixed(2) };
         }
         return acc;
       }));
+      if (activeAccount.address.toLowerCase() === order.buyer.toLowerCase()) {
+        setActiveAccountState(prev => ({ ...prev, balanceAmn: +(prev.balanceAmn + (order.purchaseCashbackAmn || 0)).toFixed(2) }));
+      }
     } else if (buyerVotes >= 2) {
       updatedOrder.status = OrderStatus.Refunded;
       updatedOrder.adminHeldTokenStatus = 'REFUNDED_TO_BUYER';
       updatedOrder.resolutionNotes = `Tribunal Multi-Sig memutuskan memenangkan Pembeli (${buyerVotes} dari 3 suara).`;
       setAllAccounts(prev => prev.map(acc => {
         if (acc.address.toLowerCase() === order.buyer.toLowerCase()) {
-          return { ...acc, balanceSol: +(acc.balanceSol + order.amountSol).toFixed(4) };
+          return adjustOrderPaymentBalance(acc, order, 1);
         }
         return acc;
       }));
@@ -1215,6 +1309,8 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       variation: 'Custom Request',
       quantity: 1,
       amountSol: params.amountSol,
+      amountAmn: +(params.amountSol * SOL_TO_AMN_RATE).toFixed(2),
+      paymentToken: 'SOL',
       sellerAddress: params.seller,
       notes: params.desc
     });

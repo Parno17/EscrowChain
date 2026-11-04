@@ -10,6 +10,7 @@ export enum OrderStatus {
 }
 
 export type InitiatorType = 'buyer' | 'seller';
+export type PaymentToken = 'SOL' | 'AMN';
 
 export interface EscrowOrder {
   id: number;
@@ -25,6 +26,9 @@ export interface EscrowOrder {
   amountSol: number;   // In SOL (e.g. 1.25 SOL)
   amountAmn: number;   // Equivalent in Amanah Token ($AMN)
   amountIdr: number;   // In Rupiah (IDR)
+  paymentToken?: PaymentToken;
+  paymentAmount?: number;
+  purchaseCashbackAmn?: number;
   gasFeeSol: number;   // Solana microcent fee (e.g. 0.000005 SOL ≈ Rp 12)
   gasSavedComparedToEthIdr: number; // Gas savings vs Ethereum
 

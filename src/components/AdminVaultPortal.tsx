@@ -75,6 +75,8 @@ export const AdminVaultPortal: React.FC = () => {
   const releasedOrders = orders.filter(o => o.adminHeldTokenStatus === 'RELEASED_TO_SELLER');
   const refundedOrders = orders.filter(o => o.adminHeldTokenStatus === 'REFUNDED_TO_BUYER');
   const complaintOrders = orders.filter(o => o.status === OrderStatus.RefundRequested);
+  const getPaymentLabel = (order: EscrowOrder) =>
+    `${order.paymentAmount ?? order.amountSol} ${order.paymentToken ?? 'SOL'}`;
 
   const totalHeldSol = heldOrders.reduce((sum, o) => sum + o.amountSol, 0);
   const totalReleasedSol = releasedOrders.reduce((sum, o) => sum + o.amountSol, 0);
@@ -103,12 +105,12 @@ export const AdminVaultPortal: React.FC = () => {
     setSelectedOrderForAction(order);
     setActionType(type);
     if (type === 'toSeller') {
-      setAdminNotes(`Verifikasi pengiriman pesanan #${order.id} selesai. Otoritas Admin Multi-Sig menyetujui pelepasan dana pokok ${order.amountSol} SOL dan bonus yield ke Penjual.`);
+      setAdminNotes(`Verifikasi pengiriman pesanan #${order.id} selesai. Otoritas Admin Multi-Sig menyetujui pelepasan dana pokok ${getPaymentLabel(order)} dan bonus yield ke Penjual.`);
     } else {
       if (order.status === OrderStatus.RefundRequested) {
-        setAdminNotes(`Admin memverifikasi laporan barang tidak sesuai pada pesanan #${order.id}. Bukti unboxing valid & terkonfirmasi. Otoritas Admin mengesahkan konfirmasi pengembalian dana 100% (${order.amountSol} SOL) dari PDA Solana kembali ke dompet pembeli.`);
+        setAdminNotes(`Admin memverifikasi laporan barang tidak sesuai pada pesanan #${order.id}. Bukti unboxing valid & terkonfirmasi. Otoritas Admin mengesahkan konfirmasi pengembalian dana 100% (${getPaymentLabel(order)}) dari PDA Solana kembali ke dompet pembeli.`);
       } else {
-        setAdminNotes(`Pemeriksaan komplain pesanan #${order.id} disetujui. Otoritas Admin menyetujui pengembalian dana 100% (${order.amountSol} SOL) kembali ke dompet Pembeli.`);
+        setAdminNotes(`Pemeriksaan komplain pesanan #${order.id} disetujui. Otoritas Admin menyetujui pengembalian dana 100% (${getPaymentLabel(order)}) kembali ke dompet Pembeli.`);
       }
     }
   };
@@ -399,7 +401,7 @@ export const AdminVaultPortal: React.FC = () => {
 
                       <div className="flex items-center gap-3">
                         <div className="text-right font-mono text-xs">
-                          <span className="text-emerald-400 font-bold">{order.amountSol} SOL</span>
+                          <span className="text-emerald-400 font-bold">{getPaymentLabel(order)}</span>
                           <span className="text-slate-400 text-[10px] block">≈ Rp {order.amountIdr.toLocaleString('id-ID')}</span>
                         </div>
 
@@ -471,7 +473,7 @@ export const AdminVaultPortal: React.FC = () => {
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
                           >
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>✅ Approve Lepas Dana ke Penjual ({order.amountSol} SOL)</span>
+                            <span>✅ Approve Lepas Dana ke Penjual ({getPaymentLabel(order)})</span>
                           </button>
 
                           {/* 2. APPROVE REFUND KE PEMBELI */}
@@ -481,7 +483,7 @@ export const AdminVaultPortal: React.FC = () => {
                             className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-md shadow-rose-600/20"
                           >
                             <RotateCcw className="w-4 h-4" />
-                            <span>🔄 Approve Refund ke Pembeli ({order.amountSol} SOL)</span>
+                            <span>🔄 Approve Refund ke Pembeli ({getPaymentLabel(order)})</span>
                           </button>
                         </div>
                       </div>
@@ -717,7 +719,7 @@ export const AdminVaultPortal: React.FC = () => {
                         <h4 className="text-sm font-bold text-white mt-0.5">{order.productName}</h4>
                       </div>
                       <div className="text-right font-mono text-xs">
-                        <span className="text-white font-bold">{order.amountSol} SOL</span>
+                        <span className="text-white font-bold">{getPaymentLabel(order)}</span>
                         <div className="text-[11px] text-slate-400">≈ Rp {order.amountIdr.toLocaleString('id-ID')}</div>
                       </div>
                     </div>
@@ -749,7 +751,7 @@ export const AdminVaultPortal: React.FC = () => {
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
                       >
                         <Vote className="w-3.5 h-3.5" />
-                        <span>Vote: Lepas Dana ke Penjual ({order.amountSol} SOL)</span>
+                        <span>Vote: Lepas Dana ke Penjual ({getPaymentLabel(order)})</span>
                       </button>
 
                       <button
@@ -757,7 +759,7 @@ export const AdminVaultPortal: React.FC = () => {
                         className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
                       >
                         <Vote className="w-3.5 h-3.5" />
-                        <span>Vote: Refund 100% ke Pembeli ({order.amountSol} SOL)</span>
+                        <span>Vote: Refund 100% ke Pembeli ({getPaymentLabel(order)})</span>
                       </button>
                     </div>
                   </div>
@@ -797,7 +799,7 @@ export const AdminVaultPortal: React.FC = () => {
 
                 <div className="flex items-center gap-3">
                   <div className="text-right font-mono text-xs">
-                    <div className="font-bold text-white">{order.amountSol} SOL</div>
+                    <div className="font-bold text-white">{getPaymentLabel(order)}</div>
                     <div className="text-slate-400 text-[10px]">Rp {order.amountIdr.toLocaleString('id-ID')}</div>
                   </div>
 

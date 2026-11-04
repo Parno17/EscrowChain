@@ -78,6 +78,8 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onOpenDetail }) => 
   };
 
   const idrAmount = Math.round((order.amountSol || 0) * SOL_IDR_RATE);
+  const paymentToken = order.paymentToken || 'SOL';
+  const paymentAmount = order.paymentAmount ?? order.amountSol;
 
   return (
     <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4">
@@ -113,7 +115,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onOpenDetail }) => 
           <div>
             <span className="text-xs text-slate-500 block">Nilai Escrow</span>
             <span className="text-base font-bold text-emerald-400">
-              {order.amountSol} SOL
+              {paymentAmount} {paymentToken}
             </span>
           </div>
           <div className="text-right">

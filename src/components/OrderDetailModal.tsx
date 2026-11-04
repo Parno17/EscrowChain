@@ -98,6 +98,8 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   };
 
   const idrAmount = Math.round((order.amountSol || 0) * SOL_IDR_RATE);
+  const paymentToken = order.paymentToken || 'SOL';
+  const paymentAmount = order.paymentAmount ?? order.amountSol;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-fade-in">
@@ -142,7 +144,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               Nilai Escrow Terkunci (PDA)
             </span>
             <div className="text-lg font-bold text-emerald-400">
-              {order.amountSol} SOL
+              {paymentAmount} {paymentToken}
             </div>
             <div className="text-[11px] text-slate-400">
               ≈ Rp {idrAmount.toLocaleString('id-ID')} ({order.amountAmn || Math.round(order.amountSol * 700)} AMN)
@@ -205,7 +207,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               </p>
             )}
             <div className="text-[11px] text-amber-300/80 font-mono">
-              Dana {order.amountSol} SOL tetap aman di PDA Solana menunggu persetujuan Admin atau kesepakatan penjual.
+              Dana {paymentAmount} {paymentToken} tetap aman di PDA Solana menunggu persetujuan Admin atau kesepakatan penjual.
             </div>
           </div>
         )}
@@ -218,7 +220,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <span>Status: Pengembalian Dana (100% Refunded) Berhasil</span>
               </span>
               <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[11px]">
-                +{order.amountSol} SOL Kembali ke Dompet
+                +{paymentAmount} {paymentToken} Kembali ke Dompet
               </span>
             </div>
             <p className="text-slate-300">

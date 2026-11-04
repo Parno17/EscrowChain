@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { ElectronicProduct, OrderStatus, EscrowOrder } from '../types/escrow';
+import { ElectronicProduct, OrderStatus, EscrowOrder, PaymentToken } from '../types/escrow';
 import { SOL_IDR_RATE, AMN_IDR_RATE, SOLANA_GAS_FEE_SOL } from '../data/mockData';
 import { AMNTokenLogo } from './EscrowChainLogo';
 import { 
@@ -49,6 +49,7 @@ export const BuyerPortal: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ElectronicProduct | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
+  const [paymentToken, setPaymentToken] = useState<PaymentToken>('SOL');
   const [notesInput, setNotesInput] = useState<string>('');
   const [isBuying, setIsBuying] = useState<boolean>(false);
 
@@ -106,6 +107,7 @@ export const BuyerPortal: React.FC = () => {
     setSelectedProduct(product);
     setSelectedVariation(product.variations[0] || 'Standar');
     setQuantity(1);
+    setPaymentToken('SOL');
     setNotesInput(`Pesanan ${product.name}`);
   };
 
@@ -114,20 +116,24 @@ export const BuyerPortal: React.FC = () => {
     if (!selectedProduct) return;
 
     setIsBuying(true);
-    const totalSol = Number((selectedProduct.priceSol * quantity).toFixed(4));
-
-    await buyProduct({
-      productId: selectedProduct.id,
-      productName: selectedProduct.name,
-      variation: selectedVariation,
-      quantity,
-      amountSol: totalSol,
-      sellerAddress: selectedProduct.sellerAddress,
-      notes: notesInput
-    });
-
-    setIsBuying(false);
-    setSelectedProduct(null);
+    try {
+      const totalSol = Number((selectedProduct.priceSol * quantity).toFixed(9));
+      const totalAmn = Number((selectedProduct.priceAmn * quantity).toFixed(2));
+      const result = await buyProduct({
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        variation: selectedVariation,
+        quantity,
+        amountSol: totalSol,
+        amountAmn: totalAmn,
+        paymentToken,
+        sellerAddress: selectedProduct.sellerAddress,
+        notes: notesInput
+      });
+      if (result.success) setSelectedProduct(null);
+    } finally {
+      setIsBuying(false);
+    }
   };
 
   const handleConfirmCompleted = async (orderId: number) => {
@@ -158,7 +164,7 @@ export const BuyerPortal: React.FC = () => {
             Belanja Barang Elektronik UMKM Terlindungi Smart Contract
           </h2>
           <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Dana SOL dikunci di Program Derived Address (PDA) Solana. Jika barang tidak sampai atau tidak sesuai pesanan, Anda dilindungi <span className="text-rose-400 font-semibold">Garansi 100% Refund Otomatis</span>. Selama pengiriman, dana menghasilkan <span className="text-emerald-400 font-semibold">DeFi Yield Streaming</span> dengan cashback token $AMN.
+            Dana pesanan dalam SOL atau AMN dikunci di Program Derived Address (PDA) Solana. Jika barang tidak sampai atau tidak sesuai pesanan, Anda dilindungi <span className="text-rose-400 font-semibold">Garansi 100% Refund Otomatis</span>. Cashback pembelian: <span className="text-amber-300 font-semibold">0,5% untuk SOL</span> atau <span className="text-amber-300 font-semibold">3% untuk AMN</span>, selain DeFi Yield Streaming.
           </p>
         </div>
 
@@ -309,7 +315,9 @@ export const BuyerPortal: React.FC = () => {
 
                     <div className="flex items-center gap-3">
                       <div className="text-right font-mono text-xs">
-                        <span className="text-white font-bold">{order.amountSol} SOL</span>
+                        <span className="text-white font-bold">
+                          {order.paymentAmount ?? order.amountSol} {order.paymentToken ?? 'SOL'}
+                        </span>
                         <div className="text-[10px] text-slate-400">≈ Rp {order.amountIdr.toLocaleString('id-ID')}</div>
                       </div>
 
@@ -335,6 +343,12 @@ export const BuyerPortal: React.FC = () => {
                     </div>
                   </div>
 
+                  {order.status === OrderStatus.Completed && order.buyerYieldShare > 0 && (
+                    <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200">
+                      Cashback AMN diterima setelah pesanan selesai: <strong>+{order.buyerYieldShare.toFixed(2)} AMN</strong>
+                    </div>
+                  )}
+
                   {/* SPECIAL HIGHLIGHT SECTION UNTUK STATUS REFUND (BARANG TIDAK SESUAI -> PERLU KONFIRMASI ADMIN) */}
                   {isRefundActive && (
                     <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 space-y-2.5 text-xs">
@@ -343,7 +357,7 @@ export const BuyerPortal: React.FC = () => {
                         <span>Kondisi: Barang Diterima Tidak Sesuai — Memerlukan Konfirmasi Admin untuk Pengembalian Dana</span>
                       </div>
                       <p className="text-slate-300 leading-relaxed">
-                        Anda telah melaporkan bahwa barang yang diterima tidak sesuai pesanan. Sesuai arsitektur *escrow* terdesentralisasi, dana pembeli (<strong className="text-white">{order.amountSol} SOL</strong>) ditahan secara aman di Program PDA Solana dan <strong className="text-amber-300">MEMERLUKAN KONFIRMASI OLEH ADMIN MULTI-SIG</strong> untuk mengesahkan pengembalian dana 100% ke dompet Anda.
+                        Anda telah melaporkan bahwa barang yang diterima tidak sesuai pesanan. Sesuai arsitektur *escrow* terdesentralisasi, dana pembeli (<strong className="text-white">{order.paymentAmount ?? order.amountSol} {order.paymentToken ?? 'SOL'}</strong>) ditahan secara aman di Program PDA Solana dan <strong className="text-amber-300">MEMERLUKAN KONFIRMASI OLEH ADMIN MULTI-SIG</strong> untuk mengesahkan pengembalian dana 100% ke dompet Anda.
                       </p>
                       <div className="p-2.5 bg-slate-950/80 rounded-lg border border-slate-800 space-y-1">
                         <div>
@@ -376,7 +390,7 @@ export const BuyerPortal: React.FC = () => {
                           <span>Status: Pengembalian Dana Sukses 100% (Dana Telah Masuk Saldo Anda)</span>
                         </div>
                         <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold">
-                          +{order.amountSol} SOL Dikreditkan
+                          +{order.paymentAmount ?? order.amountSol} {order.paymentToken ?? 'SOL'} Dikreditkan
                         </span>
                       </div>
                       <div className="text-slate-300">
@@ -578,7 +592,7 @@ export const BuyerPortal: React.FC = () => {
                     className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-500/20"
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>Beli dengan Rekber Solana</span>
+                    <span>Beli dengan Rekber</span>
                   </button>
                 </div>
               </div>
@@ -612,6 +626,30 @@ export const BuyerPortal: React.FC = () => {
 
             <form onSubmit={handleExecuteBuy} className="space-y-3 text-xs">
               <div>
+                <label className="block text-slate-300 font-medium mb-1">Metode Pembayaran:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { token: 'SOL' as const, label: 'SOL', reward: 'Cashback 0,5%' },
+                    { token: 'AMN' as const, label: 'AMN', reward: 'Cashback 3%' }
+                  ]).map(option => (
+                    <button
+                      key={option.token}
+                      type="button"
+                      onClick={() => setPaymentToken(option.token)}
+                      className={`p-2.5 rounded-lg border text-left cursor-pointer transition-colors ${
+                        paymentToken === option.token
+                          ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-200'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}
+                    >
+                      <span className="block font-bold">{option.label}</span>
+                      <span className="text-[10px]">{option.reward} AMN</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-slate-300 font-medium mb-1">Pilih Variasi Produk:</label>
                 <select
                   value={selectedVariation}
@@ -638,9 +676,11 @@ export const BuyerPortal: React.FC = () => {
 
               <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 font-mono">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-slate-400">Total Nilai Escrow:</span>
+                  <span className="text-slate-400">Total Pembayaran:</span>
                   <span className="text-emerald-400 font-bold text-sm">
-                    {(selectedProduct.priceSol * quantity).toFixed(4)} SOL
+                    {paymentToken === 'SOL'
+                      ? `${(selectedProduct.priceSol * quantity).toFixed(4)} SOL`
+                      : `${(selectedProduct.priceAmn * quantity).toLocaleString()} AMN`}
                   </span>
                 </div>
                 <div className="flex justify-between text-[11px]">
@@ -651,13 +691,38 @@ export const BuyerPortal: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-[11px]">
                   <span className="text-slate-500">Biaya Gas Solana:</span>
-                  <span className="text-slate-300">0.000005 SOL (~Rp 12)</span>
+                  <span className="text-slate-300">{SOLANA_GAS_FEE_SOL} SOL (~Rp {Math.round(SOLANA_GAS_FEE_SOL * SOL_IDR_RATE)})</span>
                 </div>
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-500">Cashback AMN setelah pesanan selesai:</span>
+                  <span className="text-amber-300 font-bold">
+                    +{(paymentToken === 'AMN'
+                      ? selectedProduct.priceAmn * quantity * 0.03
+                      : (selectedProduct.priceSol * quantity * SOL_IDR_RATE * 0.005) / AMN_IDR_RATE
+                    ).toFixed(2)} AMN ({paymentToken === 'AMN' ? '3%' : '0,5%'})
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-500">
+                  Gas fee jaringan tetap dibayar dalam SOL untuk kedua metode pembayaran.
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Mode simulasi: saldo aplikasi diperbarui, belum ada transaksi on-chain.
+                </p>
                 <div className="flex justify-between text-[11px]">
                   <span className="text-slate-500">Proteksi Garansi:</span>
                   <span className="text-rose-400 font-semibold">100% Refundable jika barang tidak sesuai</span>
                 </div>
               </div>
+
+              {paymentToken === 'SOL' && activeAccount.balanceSol < selectedProduct.priceSol * quantity + SOLANA_GAS_FEE_SOL && (
+                <p className="text-[11px] text-rose-400">Saldo SOL tidak cukup untuk pembayaran dan gas fee.</p>
+              )}
+              {paymentToken === 'AMN' && activeAccount.balanceAmn < selectedProduct.priceAmn * quantity && (
+                <p className="text-[11px] text-rose-400">Saldo AMN tidak cukup untuk pembayaran.</p>
+              )}
+              {activeAccount.balanceSol < SOLANA_GAS_FEE_SOL && (
+                <p className="text-[11px] text-rose-400">Saldo SOL tidak cukup untuk membayar gas fee jaringan.</p>
+              )}
 
               <div className="flex gap-2 pt-2">
                 <button
@@ -669,10 +734,14 @@ export const BuyerPortal: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={isBuying}
+                  disabled={isBuying ||
+                    activeAccount.balanceSol < SOLANA_GAS_FEE_SOL ||
+                    (paymentToken === 'SOL' && activeAccount.balanceSol < selectedProduct.priceSol * quantity + SOLANA_GAS_FEE_SOL) ||
+                    (paymentToken === 'AMN' && activeAccount.balanceAmn < selectedProduct.priceAmn * quantity) ||
+                    quantity > selectedProduct.stock}
                   className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {isBuying ? 'Mengunci di Solana PDA...' : 'Kunci Dana & Pesan →'}
+                  {isBuying ? 'Memproses pembayaran...' : `Bayar ${paymentToken} & Pesan →`}
                 </button>
               </div>
             </form>
@@ -703,7 +772,9 @@ export const BuyerPortal: React.FC = () => {
             <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-400">Dana Terkunci yang Di-refund:</span>
-                <span className="text-emerald-400 font-bold">{refundModalOrder.amountSol} SOL</span>
+                <span className="text-emerald-400 font-bold">
+                  {refundModalOrder.paymentAmount ?? refundModalOrder.amountSol} {refundModalOrder.paymentToken ?? 'SOL'}
+                </span>
               </div>
               <div className="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 font-sans text-[11px] text-amber-200 leading-relaxed">
                 <strong className="text-amber-300 block mb-0.5">ℹ️ Konfirmasi Admin Diperlukan:</strong>
