@@ -37,16 +37,12 @@ interface LandingPageProps {
   onEnterApp: (targetTab?: 'buyer' | 'seller' | 'admin') => void;
   onOpenAuth: (mode?: 'signin' | 'signup') => void;
   onOpenWhitepaper: () => void;
-  onOpenAcademicReport: () => void;
-  onOpenAudit: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterApp,
   onOpenAuth,
-  onOpenWhitepaper,
-  onOpenAcademicReport,
-  onOpenAudit
+  onOpenWhitepaper
 }) => {
   const { orders, tokenomics, setActiveAccount, loginWithMetaMask } = useWeb3();
 
@@ -82,10 +78,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Zone 2: 4-5 single-line clean nav links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
             <a href="#solana-advantage" className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0">
-              Solana vs EVM
+              Cara Kerja Escrow
             </a>
             <a href="#defi-yield" className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0">
-              DeFi Yield Escrow
+              Cashback AMN
             </a>
             <a href="#tokenomics" className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0">
               Token Amanah ($AMN)
@@ -94,20 +90,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={onOpenWhitepaper} 
               className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Whitepaper (Layer 1-3)
-            </button>
-            <button 
-              onClick={onOpenAudit} 
-              className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              Anchor Contract
-            </button>
-            <button 
-              onClick={onOpenAcademicReport} 
-              className="text-slate-500 hover:text-slate-300 transition-colors whitespace-nowrap shrink-0 cursor-pointer text-xs"
-              title="Lihat dokumen riset penelitian asli Kelompok 2"
-            >
-              Arsip Riset PDF
+              Whitepaper
             </button>
           </nav>
 
@@ -142,19 +125,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               
               {/* Unboxed Metadata Kicker */}
               <div className="flex items-center gap-2 text-xs text-emerald-400 font-mono">
-                <span>EscrowChain Network</span>
+                <span>Prototipe EscrowChain</span>
                 <span aria-hidden="true">·</span>
-                <span>Solana Anchor Framework</span>
-                <span aria-hidden="true">·</span>
-                <span>Gas Fee ~Rp 12 / tx</span>
+                <span>Fokus transaksi barang elektronik</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight" style={{ textWrap: 'balance' }}>
-                Platform Rekening Bersama Terdesentralisasi Solana Pertama di Indonesia
+                Rekening Bersama untuk Transaksi Jual Beli Elektronik
               </h1>
 
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-                <strong>EscrowChain</strong> mengamankan transaksi jual beli daring UMKM dengan Smart Contract Solana berkecepatan 400ms dan biaya gas mikrocent. Selama barang dikirim, dana otomatis dialirkan ke <span className="text-emerald-400 font-semibold">DeFi Yield Streaming</span> untuk menghasilkan imbal hasil bagi pembeli dan penjual, didukung token utilitas <span className="text-emerald-400 font-semibold">Amanah ($AMN)</span>.
+                <strong>EscrowChain</strong> adalah prototipe alur rekening bersama untuk membantu pembeli dan penjual barang elektronik mengelola pembayaran, pengiriman, konfirmasi, dan pengajuan sengketa. Fitur transaksi, saldo SOL/AMN, biaya jaringan, dan cashback saat ini berjalan sebagai simulasi lokal—belum ada dana yang dikunci atau transaksi yang dikirim ke blockchain.
               </p>
 
               {/* Action Buttons: Sign In / Sign Up / Explore */}
@@ -189,28 +170,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="px-4 py-3 text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <FileText className="w-4 h-4 text-teal-400" />
-                  <span>Whitepaper (L1-3)</span>
+                  <span>Whitepaper</span>
                 </button>
               </div>
 
-              {/* Gas Fee & Performance Comparison Badge */}
+              {/* Prototype status notice */}
               <div id="solana-advantage" className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
-                  <span>Perbandingan Efisiensi Biaya Transaksi Escrow:</span>
-                  <span className="text-emerald-400 font-mono">Solana Hemat 99.98%</span>
+                  <span>Status implementasi</span>
+                  <span className="text-amber-300 font-mono">Simulasi lokal</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-rose-950/30 border border-rose-500/20 text-rose-200">
-                    <div className="font-semibold text-rose-400 mb-0.5">Ethereum (EVM)</div>
-                    <div className="font-mono text-sm font-bold">Rp 68.000 ($4.20)</div>
-                    <div className="text-[11px] text-rose-300/80 mt-1">Finalitas: 15–30 detik</div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-200">
-                    <div className="font-semibold text-emerald-400 mb-0.5">Solana Anchor (EscrowChain)</div>
-                    <div className="font-mono text-sm font-bold text-white">Rp 12.25 (0.000005 SOL)</div>
-                    <div className="text-[11px] text-emerald-300/90 mt-1">Finalitas: 400 milidetik</div>
-                  </div>
-                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Perubahan status pesanan dan saldo hanya tersimpan di aplikasi. Integrasi wallet, smart contract Solana, dan pembayaran on-chain belum tersedia; nilai biaya jaringan yang tampil di demo bukan kutipan biaya aktual.
+                </p>
               </div>
 
               {/* Quick Demo Sandbox Access */}
@@ -260,12 +232,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
                     <span className="flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>EscrowChain PDA Engine</span>
+                      <span>Alur Escrow</span>
                     </span>
-                    <span className="text-emerald-400 font-mono font-bold">Anchor v0.30</span>
+                      <span className="text-amber-300 font-mono font-bold">Prototipe</span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Dana pembeli dikunci di Program Derived Address (PDA) tanpa perantara manusia, menjamin keamanan transaksi 100% transparan on-chain.
+                      Diagram dan alur antarmuka menggambarkan rancangan escrow. Dana belum dikunci di PDA atau dikirim ke jaringan Solana.
                   </p>
                 </div>
               </div>
@@ -275,7 +247,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Visual Showcase: DeFi Yield Streaming & Solana Vault */}
+      {/* Cashback behavior in the local prototype */}
       <section id="defi-yield" className="py-16 bg-slate-950 border-b border-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -283,7 +255,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="lg:col-span-6 relative rounded-2xl overflow-hidden border border-slate-800 group">
               <img
                 src={defiVaultImg}
-                alt="EscrowChain DeFi Escrow Yield Streaming Vault"
+                alt="Ilustrasi vault untuk rancangan EscrowChain"
                 referrerPolicy="no-referrer"
                 className="w-full h-80 object-cover group-hover:scale-102 transition-transform duration-500"
               />
@@ -292,27 +264,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
                   <span className="flex items-center gap-1.5">
                     <TrendingUp className="w-4 h-4 text-emerald-400" />
-                    <span>DeFi Yield Streaming Aktif</span>
+                    <span>Cashback pada Simulasi</span>
                   </span>
-                  <span className="text-emerald-400 font-mono">6.8% - 7.1% APY</span>
+                  <span className="text-emerald-400 font-mono">0,5% SOL · 3% AMN</span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">
-                  Dana pokok escrow mengalir aman ke liquidity vault Kamino/Marinade saat barang dalam perjalanan ekspedisi kurir.
+                  Estimasi cashback AMN yang dicatat oleh simulasi setelah penyelesaian pesanan. Ini bukan bunga, yield, atau klaim aset on-chain.
                 </p>
               </div>
             </div>
 
             <div className="lg:col-span-6 space-y-5">
               <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                Mekanisme Finansial EscrowChain
+                Mekanisme Pembayaran EscrowChain
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Dana Tidak Diam: Menghasilkan Nilai Tambah bagi Pembeli dan Penjual
+                Pilih Token Pembayaran dan Lihat Estimasi Cashback
               </h2>
 
               <p className="text-sm text-slate-300 leading-relaxed">
-                Pada rekening bersama tradisional (Web 2.0), pihak ketiga mengendapkan dana escrow tanpa bunga. <strong>EscrowChain</strong> merevolusi alur tersebut:
+                Dalam prototipe ini, pembeli dapat memilih SOL atau AMN sebagai metode pembayaran simulasi. Gas jaringan untuk transaksi Solana tetap memerlukan SOL jika integrasi on-chain kelak diterapkan.
               </p>
 
               <div className="space-y-3 text-xs">
@@ -321,9 +293,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Coins className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">40% Bunga ke Pembeli (Cashback Token Amanah)</h3>
+                    <h3 className="font-semibold text-white">Cashback pembelian</h3>
                     <p className="text-slate-400 mt-0.5">
-                      Pembeli menerima cashback loyalitas dalam bentuk token Amanah ($AMN) setiap kali pesanan diverifikasi selesai.
+                      Simulasi mengestimasi cashback AMN sebesar 0,5% untuk pembayaran SOL dan 3% untuk pembayaran AMN. Cashback dikreditkan saat pesanan diselesaikan melalui alur yang mendukung reward.
                     </p>
                   </div>
                 </div>
@@ -333,9 +305,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Zap className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">40% Bunga ke Penjual (Bonus Fulfillment)</h3>
+                    <h3 className="font-semibold text-white">Pelepasan pembayaran</h3>
                     <p className="text-slate-400 mt-0.5">
-                      Penjual UMKM mendapatkan insentif tambahan di atas harga jual produk karena ketepatan waktu pengiriman.
+                      Pada alur simulasi, pembayaran dalam token asal dicatat sebagai diteruskan ke penjual setelah pesanan diselesaikan.
                     </p>
                   </div>
                 </div>
@@ -345,9 +317,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Flame className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">20% Pembakaran Deflasi ($AMN Buyback & Burn)</h3>
+                    <h3 className="font-semibold text-white">Tidak ada yield aktif</h3>
                     <p className="text-slate-400 mt-0.5">
-                      20% dari imbal hasil dialokasikan untuk membeli kembali token Amanah ($AMN) di DEX dan membakarnya secara permanen di blockchain.
+                      Fitur yield, staking, buyback, dan burn yang pernah menjadi rancangan tidak menjalankan transaksi nyata pada prototipe ini.
                     </p>
                   </div>
                 </div>
@@ -366,33 +338,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             
             <div className="lg:col-span-7 space-y-5">
               <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                Token Utilitas Asli EscrowChain
+                Token AMN dalam Prototipe
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                Tokenomics Amanah ($AMN): Utilitas Nyata untuk Ekosistem UMKM
+                Amanah ($AMN): Saldo dan Cashback Simulasi
               </h2>
 
               <p className="text-sm text-slate-300 leading-relaxed">
-                Token <strong>Amanah ($AMN)</strong> adalah SPL Token asli Solana dengan pasokan tetap 100.000.000 AMN yang dirancang sebagai instrumen utilitas, diskon biaya escrow, imbal hasil staking, dan tata kelola platform EscrowChain.
+                <strong>Amanah ($AMN)</strong> digunakan sebagai saldo simulasi dan opsi pembayaran pada demo. Token ini belum memiliki mint Solana yang terverifikasi, staking aktif, atau tata kelola on-chain. Parameter berikut hanya ilustrasi prototipe dan bukan data token aktual.
               </p>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] text-slate-400">Total Pasokan</div>
-                  <div className="text-sm font-bold font-mono text-white mt-0.5">100.000.000 AMN</div>
+                  <div className="text-[11px] text-slate-400">Aset on-chain</div>
+                  <div className="text-sm font-bold font-mono text-white mt-0.5">Belum tersedia</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] text-slate-400">Telah Dibakar (Burn)</div>
-                  <div className="text-sm font-bold font-mono text-rose-400 mt-0.5">1.420.500 AMN</div>
+                  <div className="text-[11px] text-slate-400">Burn on-chain</div>
+                  <div className="text-sm font-bold font-mono text-rose-400 mt-0.5">Tidak aktif</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] text-slate-400">Staking Pool</div>
-                  <div className="text-sm font-bold font-mono text-emerald-400 mt-0.5">11.2% APR</div>
+                  <div className="text-[11px] text-slate-400">Staking</div>
+                  <div className="text-sm font-bold font-mono text-emerald-400 mt-0.5">Tidak aktif</div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                  <div className="text-[11px] text-slate-400">Diskon Biaya Rekber</div>
-                  <div className="text-sm font-bold font-mono text-amber-400 mt-0.5">Hingga 100% (VIP)</div>
+                  <div className="text-[11px] text-slate-400">Pembayaran demo</div>
+                  <div className="text-sm font-bold font-mono text-amber-400 mt-0.5">SOL atau AMN</div>
                 </div>
               </div>
 
@@ -402,7 +374,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="px-4 py-2 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors cursor-pointer flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4 text-emerald-400" />
-                  <span>Baca Spesifikasi Lengkap Whitepaper EscrowChain (L1 - 3)</span>
+                  <span>Baca Whitepaper EscrowChain</span>
                 </button>
               </div>
 
@@ -417,10 +389,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="w-56 h-56 mx-auto rounded-full object-cover shadow-2xl border-2 border-emerald-500/30"
                 />
                 <div className="mt-4 font-mono text-xs text-slate-400">
-                  SPL Token Mint (Amanah):
-                  <div className="text-emerald-400 text-[11px] truncate mt-0.5">
-                    AMNtokEn91823HkJd9823hdkajs9823hka928374jka
-                  </div>
+                  Identitas token on-chain belum tersedia
                 </div>
               </div>
             </div>
@@ -441,7 +410,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Perlindungan Berlapis untuk Pembeli dan Penjual
             </h2>
             <p className="text-xs sm:text-sm text-slate-400">
-              Dibangun dengan standar keamanan kriptografi mutakhir Solana untuk menjamin tidak ada dana yang hilang atau disalahgunakan.
+              Ini adalah prototipe antarmuka, bukan sistem penyimpanan dana. Belum ada audit smart contract atau jaminan keamanan transaksi on-chain.
             </p>
           </div>
 
@@ -453,7 +422,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <h3 className="font-bold text-sm text-white">Program Derived Addresses (PDA)</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Dana escrow tidak disimpan di akun pribadi siapa pun, melainkan di PDA Solana yang dikendalikan oleh kode smart contract secara matematis tanpa private key eksternal.
+                PDA merupakan rancangan arsitektur untuk integrasi Solana mendatang. Implementasi demo saat ini belum membuat atau mengendalikan akun escrow on-chain.
               </p>
             </div>
 
@@ -463,7 +432,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <h3 className="font-bold text-sm text-white">Auto-Refund Timelock Protection</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Jika penjual tidak memasukkan nomor resi valid sebelum batas deadline slot Solana, pembeli dapat menarik kembali 100% dananya dengan 1 klik tanpa persetujuan penjual.
+                Dalam simulasi, pembeli dapat mengajukan klaim timeout jika pesanan melewati tenggat dan belum berstatus dikirim. Klaim perlu dipicu secara eksplisit; ini bukan refund otomatis on-chain.
               </p>
             </div>
 
@@ -473,7 +442,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <h3 className="font-bold text-sm text-white">Anti-Phishing & Pre-Flight Simulation</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Setiap persetujuan transaksi memverifikasi kalimat sandi anti-phishing pribadi pengguna dan menampilkan simulasi perubahan saldo Solana sebelum instruksi ditandatangani.
+                Antarmuka demo menyediakan edukasi anti-phishing dan pratinjau perubahan saldo simulasi. Tidak ada instruksi blockchain yang ditandatangani atau dikirim.
               </p>
             </div>
 
@@ -488,7 +457,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center gap-3">
             <span className="font-bold text-slate-300">EscrowChain Web3</span>
             <span>·</span>
-            <span>Solana Anchor Rekening Bersama · Token Utilitas Amanah ($AMN)</span>
+            <span>Prototipe rekening bersama untuk transaksi elektronik · Saldo demo AMN</span>
           </div>
 
           <div className="flex items-center gap-6">
@@ -496,13 +465,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Masuk / Login
             </button>
             <button onClick={onOpenWhitepaper} className="hover:text-slate-300 transition-colors cursor-pointer">
-              Whitepaper (L1-L3)
-            </button>
-            <button onClick={onOpenAudit} className="hover:text-slate-300 transition-colors cursor-pointer">
-              Anchor Contract Audit
-            </button>
-            <button onClick={onOpenAcademicReport} className="hover:text-slate-300 transition-colors cursor-pointer text-slate-400">
-              Dokumen Riset Kelompok 2 (PDF)
+              Whitepaper
             </button>
           </div>
         </div>

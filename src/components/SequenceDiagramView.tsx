@@ -74,13 +74,13 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            Alur Interaksi Aktor (UML Sequence Diagram Model)
+            Alur transaksi (simulasi lokal)
           </div>
           <h2 className="text-xl font-bold text-white">
-            Simulasi Diagram Sekuensial: Buyer · Escrow · Seller
+            Pesanan Barang Elektronik: Pembeli · Escrow · Penjual
           </h2>
           <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Representasi visual interaktif alur kerja rekening bersama berdasarkan diagram sekuensial yang Anda unggah.
+            Saldo, pembayaran, biaya jaringan, dan perubahan status pada diagram ini hanya simulasi aplikasi; tidak ada transaksi yang dikirim ke Solana.
           </p>
         </div>
 
@@ -150,16 +150,16 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
 
           <div className="flex flex-col items-center">
             <div className="px-6 py-2.5 rounded-xl bg-emerald-950/80 border-2 border-emerald-500 text-emerald-200 shadow-md inline-block">
-              Escrow (Solana PDA)
+              Escrow (Simulasi Lokal)
             </div>
             <div className="text-[11px] text-emerald-400 font-mono mt-1">
-              Solana Anchor Program
+              State aplikasi (lokal)
             </div>
           </div>
 
           <div className="flex flex-col items-center">
             <div className="px-6 py-2.5 rounded-xl bg-slate-900 border-2 border-slate-700 text-white shadow-md inline-block">
-              Seller (Penjual UMKM)
+              Seller (Penjual)
             </div>
             <div className="text-[11px] text-slate-400 font-mono mt-1">
               {currentOrder ? currentOrder.seller.slice(0, 8) + '...' : '0x89D2...'}
@@ -201,7 +201,7 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
                   </div>
                 </div>
                 <div className="text-right text-[11px] text-slate-400 font-mono pr-2">
-                  createOrder()
+                  Beli produk (langsung Funded)
                 </div>
               </div>
               <div className="text-center text-xs font-semibold text-slate-300 mt-1">
@@ -233,7 +233,7 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
               {/* Arrow: Seller -> Escrow */}
               <div className="grid grid-cols-3 items-center">
                 <div className="text-left text-[11px] text-slate-400 font-mono pl-2">
-                  sellerCreateInvoice()
+                  Terbitkan invoice (Draft)
                 </div>
                 <div className="col-span-2 flex items-center justify-end">
                   <div className="w-3/4 flex items-center">
@@ -254,7 +254,7 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
             </div>
           </div>
 
-          {/* DIAGRAM STEP 2: Buyer -> Escrow: Deposit tokens */}
+          {/* DIAGRAM STEP 2: Buyer funds the order */}
           <div className="relative py-3 my-3">
             <div className="grid grid-cols-3 items-center">
               <div className="col-span-2 flex items-center">
@@ -265,22 +265,22 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
                 </div>
               </div>
               <div className="text-right text-xs font-mono font-bold text-emerald-400 pr-4">
-                Deposit tokens ({currentOrder?.amountSol || 1.5} SOL)
+                Pembayaran pesanan ({currentOrder?.paymentAmount ?? currentOrder?.amountSol ?? 1.5} {currentOrder?.paymentToken || 'SOL'})
               </div>
             </div>
             <div className="text-center text-xs font-semibold text-slate-300 mt-1">
-              Buyer menyetor SOL/AMN yang dikunci dalam Solana PDA Escrow
+              Untuk invoice berstatus Draft, pembeli membayar pada tahap ini; pembelian langsung sudah didanai saat dibuat. Fee demo menggunakan SOL dan dana tidak dikunci dalam PDA.
             </div>
           </div>
 
-          {/* DIAGRAM STEP 3: WIDE ACTIVITY BAR: Deliver product / service */}
+          {/* DIAGRAM STEP 3: seller confirmation and shipment */}
           <div className="my-5 p-3.5 rounded-xl bg-slate-900 border-2 border-slate-700 text-center relative shadow-lg">
             <div className="text-xs font-bold text-white flex items-center justify-center gap-2">
               <Package className="w-4 h-4 text-sky-400" />
-              <span>Deliver product / service (Pengiriman Barang Fisik / Jasa UMKM)</span>
+              <span>Penjual mengonfirmasi pesanan lalu mengirim barang elektronik</span>
             </div>
             <div className="text-[11px] text-slate-400 mt-0.5">
-              Penjual mengirimkan barang ke Pembeli dan memasukkan resi kurir via <code className="text-sky-300 font-mono">markShipped()</code>
+              Penjual memperbarui status menjadi dikirim dan memasukkan informasi resi.
             </div>
             {currentOrder?.courierTracking && (
               <div className="mt-1 font-mono text-[11px] text-sky-300 font-semibold">
@@ -293,7 +293,7 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
           <div className="my-4 flex items-center justify-center">
             <div className="px-4 py-2 rounded-lg bg-slate-900 border border-indigo-500/50 text-indigo-300 text-xs font-mono flex items-center gap-2">
               <RotateCcw className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Check conditions (Verifikasi Penerimaan / Batas Waktu / Sengketa)</span>
+              <span>Status menunggu konfirmasi penerimaan atau tindak lanjut sengketa/timeout</span>
             </div>
           </div>
 
@@ -336,7 +336,7 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
                 Release tokens (Dana cair ke dompet Penjual)
               </div>
               <div className="text-center text-[10px] text-slate-400 mt-0.5">
-                Dipicu oleh confirmReceived() pembeli, claimTimeout() batas waktu, atau resolve(true) arbiter
+                Pembeli mengonfirmasi penerimaan untuk menyelesaikan pesanan; admin dapat melepas dana dalam penyelesaian sengketa.
               </div>
             </div>
 
@@ -375,13 +375,16 @@ export const SequenceDiagramView: React.FC<SequenceDiagramViewProps> = ({
                 <div></div>
               </div>
               <div className="text-center text-xs font-bold text-rose-300 mt-1">
-                Tokens go back to Buyer (Dana refund kembali ke Pembeli)
+                Refund ke Pembeli dalam token pembayaran semula
               </div>
               <div className="text-center text-[10px] text-slate-400 mt-0.5">
-                Dipicu oleh refund() (pembatalan/melebihi tenggat) atau resolve(false) putusan sengketa
+                Penjual dapat melaporkan barang tidak tersedia; pembeli dapat mengajukan sengketa dan admin memproses refund. Klaim timeout harus dipicu pembeli dan hanya tersedia sebelum status Shipped.
               </div>
             </div>
 
+          </div>
+          <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2 text-[11px] text-amber-200">
+            Pembayaran SOL memberi estimasi cashback 0,5% AMN dan pembayaran AMN 3% AMN. Cashback dikreditkan pada jalur penyelesaian yang memberi reward. Seluruh perpindahan saldo di diagram adalah simulasi lokal, bukan transaksi on-chain.
           </div>
 
         </div>

@@ -108,8 +108,6 @@ function DashboardContent() {
             setActiveTab('auth');
           }}
           onOpenWhitepaper={() => setActiveTab('whitepaper')}
-          onOpenAcademicReport={() => setIsAcademicModalOpen(true)}
-          onOpenAudit={() => setActiveTab('audit')}
         />
 
         {/* Academic Research Archive Modal */}
@@ -171,7 +169,6 @@ function DashboardContent() {
         openCreateModal={() => setIsCreateModalOpen(true)}
         openWalletModal={() => setIsWalletModalOpen(true)}
         openSecurityModal={() => setIsSecurityModalOpen(true)}
-        openAcademicReport={() => setIsAcademicModalOpen(true)}
       />
 
       {/* Notification Toast */}

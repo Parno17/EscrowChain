@@ -328,7 +328,7 @@ Pubkey::find_program_address(
                     2. Pembayaran, biaya jaringan, dan cashback
                   </h3>
                   <p>
-                    Prototipe menyediakan pilihan pembayaran SOL dan AMN. Untuk menjaga pembukuan, nominal rupiah, padanan token, biaya jaringan SOL, serta metode bayar perlu disimpan sebagai nilai terpisah. Saldo SOL tetap diperlukan untuk biaya jaringan walaupun nominal escrow dibayar dengan AMN.
+                    Pembelian katalog langsung pada prototipe menyediakan pilihan SOL atau AMN; invoice yang dibuat penjual saat ini hanya dapat didanai dengan SOL. Untuk menjaga pembukuan, nominal rupiah, padanan token, biaya jaringan SOL, serta metode bayar perlu disimpan sebagai nilai terpisah. Saldo SOL tetap diperlukan untuk biaya jaringan walaupun nominal katalog dibayar dengan AMN.
                   </p>
                   <p>
                     Parameter cashback prototipe dihitung dari nilai pembelian: pembayaran SOL mendapat 0,5% nilai pembelian dalam AMN, sedangkan pembayaran AMN mendapat 3% dari jumlah AMN yang dibayarkan. Cashback hanya dikreditkan saat penyelesaian pesanan pada simulasi. Persentase tersebut bukan yield, bukan jaminan imbal hasil, dan belum didukung treasury atau aturan token on-chain.
@@ -347,33 +347,30 @@ Pubkey::find_program_address(
                     3. Alur Mesin State (State Transition Machine)
                   </h3>
                   <p>
-                    Transisi status yang direncanakan:
+                    Alur pada prototipe saat ini. Status diubah di state aplikasi; belum ada transaksi yang dieksekusi smart contract on-chain.
                   </p>
 
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-2">
+                    <div className="text-emerald-400">Pembeli ──(membeli produk dan membayar langsung dengan SOL/AMN)──&gt; Funded.</div>
+                    <div className="text-indigo-300">Penjual ──(menerbitkan invoice)──&gt; Draft ──(pembeli membayar dengan SOL + fee SOL)──&gt; Funded.</div>
                     <div className="flex items-center gap-2 text-slate-400">
-                      <span className="text-white font-bold">[1] Draft</span>
-                      <span>──(Pembeli bayar SOL/AMN + fee SOL)──&gt;</span>
-                      <span className="text-emerald-400 font-bold">[2] Funded</span>
+                      <span className="text-emerald-400 font-bold">Funded</span>
+                      <span>──(Penjual konfirmasi pesanan)──&gt;</span>
+                      <span className="text-teal-300 font-bold">ConfirmedBySeller</span>
                     </div>
                     <div className="flex items-center gap-2 text-slate-400">
-                      <span className="text-emerald-400 font-bold">[2] Funded</span>
-                      <span>──(Penjual konfirmasi dan kirim)──&gt;</span>
-                      <span className="text-teal-400 font-bold">[3] Confirmed / Shipped</span>
+                      <span className="text-teal-300 font-bold">ConfirmedBySeller</span>
+                      <span>──(Penjual mengirim barang dan memasukkan resi)──&gt;</span>
+                      <span className="text-sky-300 font-bold">Shipped</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <span className="text-teal-400 font-bold">[3] Shipped</span>
-                      <span>──(Pembeli konfirmasi / penyelesaian sengketa)──&gt;</span>
-                      <span className="text-emerald-300 font-bold">[4] Completed + settlement</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <span className="text-rose-400 font-bold">[Sengketa / deadline]</span>
-                      <span>──(otorisasi refund yang valid)──&gt;</span>
-                      <span className="text-rose-300 font-bold">[5] Refunded in original token</span>
-                    </div>
+                    <div className="text-emerald-300">Shipped ──(Pembeli mengonfirmasi barang diterima)──&gt; Completed; token pembayaran dilepas ke penjual dan cashback AMN dikreditkan.</div>
+                    <div className="text-rose-300">Funded/ConfirmedBySeller ──(Penjual melaporkan stok tidak tersedia)──&gt; Refunded dalam token pembayaran.</div>
+                    <div className="text-amber-300">Shipped ──(Pembeli mengajukan komplain)──&gt; RefundRequested ──(Admin menyetujui)──&gt; Refunded.</div>
+                    <div className="text-rose-300">Deadline lewat dan pesanan belum Shipped ──(Pembeli memicu klaim timeout)──&gt; Refunded dalam token pembayaran.</div>
+                    <div className="text-amber-200">Tribunal dapat memutus pelepasan/refund setelah kuorum tercapai; alur ini masih simulasi.</div>
                   </div>
                   <p className="text-xs text-amber-300">
-                    Refund deadline pada blockchain tidak berjalan sendiri: transaksi harus dipicu dan program harus memverifikasi deadline serta akun penerima. Penggunaan yield vault berisiko kehilangan principal dan tidak termasuk implementasi prototipe.
+                    Pembayaran dan refund mempertahankan token pembayaran awal. Gas fee tetap memerlukan SOL. Timeout bukan otomatis: pengguna memicu klaim dan prototipe menolak klaim jika barang sudah berstatus Shipped. Cashback 0,5% (bayar SOL) atau 3% (bayar AMN) baru dikreditkan ketika dana diselesaikan ke penjual, termasuk penyelesaian oleh admin/tribunal yang disetujui. Semua saldo, signature, dan perubahan status di atas adalah simulasi lokal; yield vault tidak aktif.
                   </p>
                 </div>
 

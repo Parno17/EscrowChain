@@ -6,11 +6,9 @@ import {
   Lock, 
   TrendingUp, 
   BookOpen, 
-  FileCode, 
   ShieldAlert, 
   ShieldCheck,
   Home, 
-  GraduationCap,
   LogIn,
   LogOut,
   Store,
@@ -31,7 +29,6 @@ interface NavbarProps {
   openCreateModal: () => void;
   openWalletModal: () => void;
   openSecurityModal: () => void;
-  openAcademicReport: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -39,8 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   openCreateModal,
   openWalletModal,
-  openSecurityModal,
-  openAcademicReport
+  openSecurityModal
 }) => {
   const { activeAccount, userAuth, logout, setActiveAccount } = useWeb3();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -151,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 <Store className="w-3.5 h-3.5 text-teal-400" />
-                <span>Portal Penjual UMKM</span>
+                <span>Portal Penjual</span>
               </button>
 
               <button
@@ -205,18 +201,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Lock className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Portal Admin Multi-Sig</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('audit')}
-                className={`px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                  activeTab === 'audit' 
-                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
-                }`}
-              >
-                <FileCode className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Audit Kontrak</span>
               </button>
 
               <button
@@ -285,7 +269,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span className="w-2 h-2 rounded-full animate-pulse bg-current" />
               <span>
-                {currentRole === 'admin' ? '🛡️ Admin Multi-Sig' : currentRole === 'seller' ? '🏪 Penjual UMKM' : '👤 Pembeli'}
+                {currentRole === 'admin' ? '🛡️ Admin Multi-Sig' : currentRole === 'seller' ? '🏪 Penjual' : '👤 Pembeli'}
               </span>
               <ChevronDown className="w-3.5 h-3.5 opacity-70" />
             </button>
@@ -306,7 +290,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}>
                   <span className="flex items-center gap-2">
                     {currentRole === 'admin' ? <Lock className="w-4 h-4 text-indigo-400" /> : currentRole === 'seller' ? <Store className="w-4 h-4 text-teal-400" /> : <ShoppingBag className="w-4 h-4 text-emerald-400" />}
-                    <span>{currentRole === 'admin' ? 'Portal Admin Vault' : currentRole === 'seller' ? 'Portal Penjual UMKM' : 'Portal Pembeli'}</span>
+                    <span>{currentRole === 'admin' ? 'Portal Admin Vault' : currentRole === 'seller' ? 'Portal Penjual' : 'Portal Pembeli'}</span>
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 font-bold">Aktif</span>
                 </div>
@@ -344,15 +328,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               {activeAccount.balanceSol.toFixed(2)} SOL
             </span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
-
-          {/* Academic Archive Shortcut */}
-          <button
-            onClick={openAcademicReport}
-            className="hidden md:flex p-1.5 sm:p-2 rounded-lg bg-slate-950/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-            title="Buka Dokumen Riset Kelompok 2 AMIKOM (PDF)"
-          >
-            <GraduationCap className="w-4 h-4 text-indigo-400" />
           </button>
 
           {/* Security Suite Shortcut */}
@@ -452,13 +427,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Lock className="w-4 h-4" />
                 <span>Portal Admin Multi-Sig</span>
-              </button>
-              <button
-                onClick={() => { setActiveTab('audit'); setMobileMenuOpen(false); }}
-                className="w-full text-left py-2 px-3 rounded-lg text-slate-300 hover:bg-slate-900 flex items-center gap-2"
-              >
-                <FileCode className="w-4 h-4 text-indigo-400" />
-                <span>Audit Smart Contract</span>
               </button>
               <button
                 onClick={() => { setActiveTab('defi'); setMobileMenuOpen(false); }}
