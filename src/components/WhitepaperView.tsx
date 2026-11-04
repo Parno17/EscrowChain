@@ -153,13 +153,13 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
 
                 <div className="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed space-y-4">
                   <p>
-                    EscrowChain adalah rancangan aplikasi rekening bersama digital yang bertujuan membantu pembeli dan penjual UMKM mengelola pembayaran, bukti pemenuhan pesanan, serta penyelesaian sengketa secara lebih transparan. Dokumen ini menjelaskan masalah, arsitektur yang direncanakan, token Amanah ($AMN), model risiko, dan status implementasi prototipe.
+                    EscrowChain adalah rancangan aplikasi rekening bersama digital yang bertujuan membantu pembeli dan penjual barang elektronik mengelola pembayaran, bukti pemenuhan pesanan, serta penyelesaian sengketa secara lebih transparan. Dokumen ini menjelaskan masalah, arsitektur yang direncanakan, token Amanah ($AMN), model risiko, dan status implementasi prototipe.
                   </p>
 
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                     <div className="text-xs font-bold text-white">Ruang lingkup dokumen</div>
                     <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
-                      <li>Tujuan dan batasan produk rekber untuk transaksi barang UMKM.</li>
+                      <li>Tujuan dan batasan sistem rekening bersama untuk transaksi jual beli barang elektronik.</li>
                       <li>Lifecycle pesanan, pembayaran SOL atau AMN, refund, dan peran pihak terkait.</li>
                       <li>Model utilitas AMN yang masih berupa parameter prototipe, bukan penawaran aset.</li>
                       <li>Asumsi keamanan, risiko operasional, rencana validasi, serta sumber teknis.</li>
@@ -394,7 +394,7 @@ Pubkey::find_program_address(
               </article>
             )}
 
-            {/* SECTION 03: LAYER 3 UMKM GATEWAY & BLINKS */}
+            {/* SECTION 03: LAYER 3 E-COMMERCE GATEWAY & BLINKS */}
             {activeSection === 'layer3' && (
               <article className="space-y-6 animate-fade-in">
                 <div className="border-b border-slate-800 pb-4">
@@ -556,10 +556,10 @@ Response JSON:
                           <td className="p-3 font-sans text-slate-400">Emisi bertahap selama 48 bulan</td>
                         </tr>
                         <tr>
-                          <td className="p-3 font-sans font-medium text-white">Dana Hibah & Adopsi UMKM</td>
+                          <td className="p-3 font-sans font-medium text-white">Adopsi Penjual & Ekosistem</td>
                           <td className="p-3 text-teal-400 font-bold">25.0%</td>
                           <td className="p-3">25.000.000 AMN</td>
-                          <td className="p-3 font-sans text-slate-400">Subsidi biaya gas dan voucher transaksi UMKM</td>
+                          <td className="p-3 font-sans text-slate-400">Usulan subsidi biaya jaringan dan insentif transaksi elektronik</td>
                         </tr>
                         <tr>
                           <td className="p-3 font-sans font-medium text-white">Pool Likuiditas DEX (Raydium)</td>
@@ -584,7 +584,7 @@ Response JSON:
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    Tingkatan Utilitas Staking untuk Merchant UMKM
+                    Tingkatan Utilitas Staking untuk Penjual Barang Elektronik
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
@@ -721,14 +721,14 @@ Response JSON:
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-emerald-400 font-bold font-sans">Tahap 1 · Validasi desain</div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Tetapkan aturan state machine, format IDL, struktur akun, kebijakan biaya, refund, dan kebutuhan kepatuhan. Validasi melalui test cases sebelum menerima aset nyata.
+                        Tetapkan aturan state machine, format IDL, struktur akun, kebijakan biaya, refund, serta kebutuhan kepatuhan untuk transaksi jual beli elektronik. Validasi melalui test cases sebelum menerima aset nyata.
                       </div>
                     </div>
 
                     <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
                       <div className="text-teal-400 font-bold font-sans">Tahap 2 · Devnet dan pengujian</div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Implementasikan wallet signing dan program escrow di Devnet; uji deposit kedua token, stok, penyelesaian, timeout, refund, konflik, dan retry. Jangan sambungkan DeFi yield pada tahap awal.
+                        Implementasikan wallet signing dan program escrow di Devnet; uji pembelian barang elektronik, deposit kedua token, ketersediaan produk, penyelesaian, timeout, refund, konflik, dan retry. Jangan sambungkan DeFi yield pada tahap awal.
                       </div>
                     </div>
 
