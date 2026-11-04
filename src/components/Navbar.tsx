@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { 
-  ShieldCheck, 
   ChevronDown, 
   Coins, 
   Lock, 
@@ -9,6 +8,7 @@ import {
   BookOpen, 
   FileCode, 
   ShieldAlert, 
+  ShieldCheck,
   Home, 
   GraduationCap,
   LogIn,
@@ -19,9 +19,11 @@ import {
   GitBranch,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  ArrowDownToLine
 } from 'lucide-react';
 import { PRESET_ACCOUNTS } from '../data/mockData';
+import { EscrowChainLogo } from './EscrowChainLogo';
 
 interface NavbarProps {
   activeTab: 'landing' | 'auth' | 'buyer' | 'seller' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit';
@@ -73,9 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="flex items-center gap-2 sm:gap-2.5 whitespace-nowrap shrink-0 cursor-pointer group"
           title="Kembali ke Beranda EscrowChain"
         >
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold shrink-0">
-            <ShieldCheck className="w-5 h-5 group-hover:scale-105 transition-transform" />
-          </div>
+          <EscrowChainLogo size={32} className="group-hover:scale-105 transition-transform shrink-0" />
           <div className="flex flex-col">
             <span className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-1.5 leading-tight">
               EscrowChain <span className="text-emerald-400 font-mono text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/20">Web3 Rekber</span>

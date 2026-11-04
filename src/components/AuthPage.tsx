@@ -433,7 +433,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <div className="w-full border-t border-slate-800" />
               </div>
               <span className="relative bg-slate-900 px-3 text-[10px] uppercase tracking-wider text-slate-500 font-mono">
-                atau kredensial email {selectedRole}
+                login lain yang tersedia
               </span>
             </div>
 

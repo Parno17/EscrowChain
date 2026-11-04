@@ -108,7 +108,7 @@ export interface EscrowTxEvent {
 
 export interface UserAuth {
   isLoggedIn: boolean;
-  method: 'phantom' | 'solflare' | 'backpack' | 'metamask' | 'passkey' | 'email' | 'google' | null;
+  method: 'phantom' | 'solflare' | 'backpack' | 'metamask' | 'passkey' | 'email' | null;
   email?: string;
   displayName: string;
   avatarUrl?: string;
@@ -127,7 +127,7 @@ export interface Web3Account {
   role: 'buyer' | 'seller' | 'admin' | 'arbiter';
   name: string;
   email?: string;
-  authMethod?: 'phantom' | 'solflare' | 'backpack' | 'metamask' | 'google' | 'passkey';
+  authMethod?: 'phantom' | 'solflare' | 'backpack' | 'metamask' | 'passkey';
   balanceSol: number;       // SOL Balance
   balanceAmn: number;       // AMN Token Balance
   balanceUsdc: number;      // USDC-SPL Balance

@@ -19,8 +19,12 @@ import {
   Sparkles, 
   RefreshCw, 
   CheckCircle2, 
-  ExternalLink 
+  ExternalLink,
+  ArrowDownToLine
 } from 'lucide-react';
+import { AMNTokenLogo } from './EscrowChainLogo';
+import { TokenTopupModal } from './TokenTopupModal';
+import defiVaultImg from '../assets/images/defi_vault_yield_1792757843028.jpg';
 
 export const AmanahDefiHub: React.FC = () => {
   const { 
@@ -43,6 +47,9 @@ export const AmanahDefiHub: React.FC = () => {
   const [swapTo, setSwapTo] = useState<'SOL' | 'AMN' | 'USDC'>('AMN');
   const [swapAmountInput, setSwapAmountInput] = useState('1');
   const [isSwapLoading, setIsSwapLoading] = useState(false);
+
+  // TopUp Modal
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
 
   // Calculate swap estimate
   const numSwapAmount = parseFloat(swapAmountInput) || 0;
@@ -102,6 +109,9 @@ export const AmanahDefiHub: React.FC = () => {
   return (
     <div className="space-y-6">
       
+      {/* TopUp Modal */}
+      <TokenTopupModal isOpen={isTopupModalOpen} onClose={() => setIsTopupModalOpen(false)} />
+
       {/* Header Banner with Visual Asset */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
@@ -118,14 +128,21 @@ export const AmanahDefiHub: React.FC = () => {
               Dana pesanan yang terkunci di rekening bersama tidak menganggur. Protokol mengalirkan agunan ke yield pool Solana liquid staking dengan imbal hasil 6.8% APY yang dibagikan kepada pembeli (cashback) dan penjual (bonus), serta membakar token $AMN.
             </p>
             <div className="flex flex-wrap gap-4 pt-2 text-xs font-mono">
-              <div className="flex items-center gap-1.5 text-slate-300">
+              <div className="flex items-center gap-2 text-slate-300 bg-slate-950/60 border border-slate-700 rounded-lg px-2.5 py-1.5">
+                <AMNTokenLogo size={18} className="drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
                 <span className="text-slate-500">Saldo Anda:</span>
-                <span className="text-white font-bold">{activeAccount.balanceAmn.toLocaleString()} AMN</span>
+                <span className="text-amber-300 font-bold">{activeAccount.balanceAmn.toLocaleString()} AMN</span>
               </div>
               <div className="flex items-center gap-1.5 text-emerald-400">
                 <span className="text-slate-500">Staked:</span>
                 <span className="font-bold">{activeAccount.stakedAmn.toLocaleString()} AMN</span>
               </div>
+              <button
+                onClick={() => setIsTopupModalOpen(true)}
+                className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-md cursor-pointer transition-colors"
+              >
+                Top Up AMN
+              </button>
               <button
                 onClick={() => requestAmnAirdrop(500)}
                 className="text-[11px] px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md cursor-pointer transition-colors"
@@ -137,7 +154,7 @@ export const AmanahDefiHub: React.FC = () => {
 
           <div className="lg:col-span-4 h-48 lg:h-full relative overflow-hidden">
             <img
-              src="/src/assets/images/defi_vault_yield_1792757843028.jpg"
+              src={defiVaultImg}
               alt="DeFi Escrow Vault"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover opacity-80"

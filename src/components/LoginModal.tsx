@@ -30,6 +30,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
   const [nameInput, setNameInput] = useState(() => getRoleName('buyer'));
   const [securityPhraseInput, setSecurityPhraseInput] = useState('Garuda-Solana-Proteksi-2026');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -37,6 +38,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
     setRoleInput(newRole);
     setEmailInput(getRoleEmail(newRole));
     setNameInput(getRoleName(newRole));
+    setErrorMessage(null);
   };
 
   const handleMetaMaskLogin = async () => {
@@ -280,6 +282,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
             atau login email non-custodial
           </span>
         </div>
+
+        {errorMessage && (
+          <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/40 text-rose-200 text-xs">
+            {errorMessage}
+          </div>
+        )}
 
         {/* Email Form */}
         <form onSubmit={handleEmailSubmit} className="space-y-3 text-xs">

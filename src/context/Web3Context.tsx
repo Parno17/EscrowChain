@@ -80,6 +80,8 @@ interface Web3ContextType {
   stakeAmnTokens: (amountAmn: number) => Promise<{ success: boolean; txHash?: string }>;
   unstakeAmnTokens: (amountAmn: number) => Promise<{ success: boolean; txHash?: string }>;
   swapTokens: (fromToken: 'SOL' | 'AMN' | 'USDC', toToken: 'SOL' | 'AMN' | 'USDC', amountFrom: number) => Promise<{ success: boolean; receivedAmount: number; txHash?: string }>;
+  topupAmnToken: (amountAmn: number, costSol: number) => Promise<{ success: boolean; txHash?: string }>;
+  distributeAmnToken: (amountAmn: number, target: 'community' | 'stakers' | 'sellers' | 'burn', memo?: string) => Promise<{ success: boolean; txHash?: string }>;
 
   // ADMIN / GOVERNANCE ACTIONS (Multi-Sig, Circuit Breaker, DAO Tribunal)
   adminReleaseFundsToSeller: (orderId: number, adminNotes?: string) => Promise<{ success: boolean; txHash?: string; error?: string }>;
@@ -341,7 +343,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role,
         name: name || (role === 'admin' ? 'Admin Protokol' : email.split('@')[0]),
         email,
-        authMethod: 'google',
         balanceSol: role === 'admin' ? 450.0 : role === 'seller' ? 25.0 : 8.5,
         balanceAmn: role === 'admin' ? 250000 : role === 'seller' ? 12000 : 3500,
         balanceUsdc: role === 'admin' ? 95000 : 1500,
@@ -363,6 +364,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       method: 'email',
       email,
       displayName: existing.name,
+      avatarUrl: existing.avatarUrl,
       walletAddress: existing.address,
       role: existing.role,
       securityPhrase: existing.securityPhrase,
@@ -996,6 +998,53 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true, receivedAmount, txHash };
   };
 
+  // ── Top Up AMN dengan SOL ──────────────────────────────────────────────────
+  const topupAmnToken = async (amountAmn: number, costSol: number): Promise<{ success: boolean; txHash?: string }> => {
+    if (activeAccount.balanceSol < costSol) {
+      showNotification('error', 'Saldo SOL tidak mencukupi untuk membeli AMN.');
+      return { success: false };
+    }
+    await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
+    setActiveAccountState(prev => ({
+      ...prev,
+      balanceSol: +(prev.balanceSol - costSol - 0.000005).toFixed(4),
+      balanceAmn: +(prev.balanceAmn + amountAmn)
+    }));
+    const txHash = generateSolanaTxSignature();
+    showNotification('success', `Top Up Berhasil! +${amountAmn.toLocaleString()} AMN diterima. Dibayar: ${costSol} SOL.`, txHash);
+    return { success: true, txHash };
+  };
+
+  // ── Distribusi AMN ke Target ───────────────────────────────────────────────
+  const distributeAmnToken = async (
+    amountAmn: number,
+    target: 'community' | 'stakers' | 'sellers' | 'burn',
+    memo?: string
+  ): Promise<{ success: boolean; txHash?: string }> => {
+    if (activeAccount.balanceAmn < amountAmn) {
+      showNotification('error', 'Saldo AMN tidak mencukupi untuk distribusi.');
+      return { success: false };
+    }
+    await new Promise(r => setTimeout(r, 700 + Math.random() * 800));
+    setActiveAccountState(prev => ({
+      ...prev,
+      balanceAmn: +(prev.balanceAmn - amountAmn)
+    }));
+    const targetLabel =
+      target === 'community' ? 'Komunitas'
+      : target === 'stakers' ? 'Stakers AMN'
+      : target === 'sellers' ? 'Penjual UMKM'
+      : 'Burn Deflasi 🔥';
+    const txHash = generateSolanaTxSignature();
+    if (target === 'burn') {
+      setTokenomics(prev => ({ ...prev, totalBurned: prev.totalBurned + amountAmn }));
+      showNotification('success', `${amountAmn.toLocaleString()} AMN berhasil DIBAKAR permanen. Supply berkurang.${memo ? ` Memo: ${memo}` : ''}`, txHash);
+    } else {
+      showNotification('success', `${amountAmn.toLocaleString()} AMN berhasil didistribusikan ke ${targetLabel}.${memo ? ` Memo: ${memo}` : ''}`, txHash);
+    }
+    return { success: true, txHash };
+  };
+
   // ADMIN ACTIONS
   const adminReleaseFundsToSeller = async (orderId: number, adminNotes?: string) => {
     const order = getOrderById(orderId);
@@ -1321,6 +1370,8 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         stakeAmnTokens,
         unstakeAmnTokens,
         swapTokens,
+        topupAmnToken,
+        distributeAmnToken,
         adminReleaseFundsToSeller,
         adminReleaseRefundToBuyer,
         adminTriggerBuybackBurn,

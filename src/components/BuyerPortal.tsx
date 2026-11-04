@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { ElectronicProduct, OrderStatus, EscrowOrder } from '../types/escrow';
 import { SOL_IDR_RATE, AMN_IDR_RATE, SOLANA_GAS_FEE_SOL } from '../data/mockData';
+import { AMNTokenLogo } from './EscrowChainLogo';
 import { 
   ShoppingBag, 
   CheckCircle2, 
@@ -170,7 +171,10 @@ export const BuyerPortal: React.FC = () => {
 
           <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 font-mono text-xs">
             <span className="text-slate-400 block text-[10px]">CASHBACK $AMN:</span>
-            <span className="text-base font-bold text-teal-300">{activeAccount.balanceAmn} AMN</span>
+            <div className="flex items-center gap-2 mt-1">
+              <AMNTokenLogo size={20} className="drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
+              <span className="text-base font-bold text-amber-300">{activeAccount.balanceAmn.toLocaleString()} AMN</span>
+            </div>
             <span className="text-[11px] text-slate-400 block">Loyalty Token Aktif</span>
           </div>
         </div>

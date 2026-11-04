@@ -472,10 +472,10 @@ Pubkey::find_program_address(
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
                       <div className="flex items-center gap-2 text-teal-400 font-bold text-xs">
                         <Lock className="w-4 h-4" />
-                        <span>Web2.5 Non-Custodial Onboarding</span>
+                        <span>Onboarding Email & Dompet Web3</span>
                       </div>
                       <p className="text-xs text-slate-300">
-                        Otentikasi biometrik Passkey dan Google OAuth secara otomatis menerbitkan pasangan kunci kriptografi Ed25519 Solana di peramban pengguna tanpa perlu mengunduh ekstensi dompet pihak ketiga.
+                        Pengguna dapat masuk dengan email atau menghubungkan dompet Web3 seperti Phantom, Solflare, Backpack, dan MetaMask. Pada prototipe ini, akun dan saldo disimulasikan di aplikasi; autentikasi email belum menerbitkan pasangan kunci Solana atau menyimpan dana secara on-chain.
                       </p>
                     </div>
 

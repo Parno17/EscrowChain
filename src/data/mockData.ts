@@ -90,7 +90,7 @@ export const PRESET_ACCOUNTS: Web3Account[] = [
     role: 'seller',
     name: 'Wahyudi Tech Store',
     email: 'wahyudi.tech@amikom.ac.id',
-    authMethod: 'google',
+    authMethod: 'passkey',
     balanceSol: 22.80,
     balanceAmn: 8400,
     balanceUsdc: 2100,

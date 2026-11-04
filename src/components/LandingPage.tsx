@@ -3,6 +3,7 @@ import heroSolanaImg from '../assets/images/hero_solana_escrow_1792757841783.jpg
 import defiVaultImg from '../assets/images/defi_vault_yield_1792757843028.jpg';
 import amanahTokenImg from '../assets/images/amanah_token_emblem_1792757841936.jpg';
 import { useWeb3 } from '../context/Web3Context';
+import { EscrowChainLogo } from './EscrowChainLogo';
 import { 
   SOL_IDR_RATE, 
   AMN_IDR_RATE, 
@@ -72,9 +73,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           
           {/* Zone 1: Single text element wordmark: EscrowChain */}
           <div className="flex items-center gap-2.5 whitespace-nowrap shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
+            <EscrowChainLogo size={30} className="shrink-0" />
             <span className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
               EscrowChain <span className="text-emerald-400 font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">Solana Web3</span>
             </span>
