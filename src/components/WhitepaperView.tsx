@@ -147,7 +147,7 @@ export const WhitepaperView: React.FC<WhitepaperViewProps> = ({
                     Chapter 00 · Abstract & Executive Summary
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-extrabold text-white mt-1">
-                    EscrowChain: Rancangan Rekening Bersama Digital untuk Transaksi UMKM
+                    EscrowChain - Rancang Bangun Sistem Rekening Bersama Berbasis Smart Contract Solana untuk Meningkatkan Kepercayaan Transaksi Jual Beli Elektronik
                   </h1>
                 </div>
 
