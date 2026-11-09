@@ -1,40 +1,44 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
-import { X, ShieldCheck, Check, Sparkles, ArrowRight, User, Mail, KeyRound, Store, ShoppingBag, Lock } from 'lucide-react';
+import { X, ShieldCheck, Check, Sparkles, ArrowRight, User, Mail, KeyRound, Store, ShoppingBag, Lock, Truck } from 'lucide-react';
 import { PRESET_ACCOUNTS } from '../data/mockData';
+import { LoginRole } from '../types/escrow';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectRoleTab?: (role: 'buyer' | 'seller' | 'admin') => void;
+  onSelectRoleTab?: (role: LoginRole) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelectRoleTab }) => {
   const { loginWithWallet, loginWithMetaMask, loginWithEmail, registerWithEmail, setActiveAccount } = useWeb3();
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
-  const [roleInput, setRoleInput] = useState<'buyer' | 'seller' | 'admin'>('buyer');
+  const [roleInput, setRoleInput] = useState<LoginRole>('buyer');
   
-  const getRoleEmail = (r: 'buyer' | 'seller' | 'admin') => {
+  const getRoleEmail = (r: LoginRole) => {
     if (r === 'buyer') return 'z.alimatus@students.amikom.ac.id';
     if (r === 'seller') return 'parno.elektronik@gadget-official.id';
+    if (r === 'courier') return 'kurir.demo@escrowchain.id';
     return 'admin.escrow@amikom.ac.id';
   };
 
-  const getRoleName = (r: 'buyer' | 'seller' | 'admin') => {
+  const getRoleName = (r: LoginRole) => {
     if (r === 'buyer') return 'Zayyini Alimatus';
     if (r === 'seller') return 'Sentra Gadget Elektronik';
+    if (r === 'courier') return 'Kurir Demo EscrowChain';
     return 'M. Reza D. Nur (Admin)';
   };
 
   const [emailInput, setEmailInput] = useState(() => getRoleEmail('buyer'));
   const [nameInput, setNameInput] = useState(() => getRoleName('buyer'));
+  const [passwordInput, setPasswordInput] = useState('');
   const [securityPhraseInput, setSecurityPhraseInput] = useState('Garuda-Solana-Proteksi-2026');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleRoleChange = (newRole: 'buyer' | 'seller' | 'admin') => {
+  const handleRoleChange = (newRole: LoginRole) => {
     setRoleInput(newRole);
     setEmailInput(getRoleEmail(newRole));
     setNameInput(getRoleName(newRole));
@@ -64,14 +68,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (tab === 'signin') {
-      await loginWithEmail(emailInput, nameInput || undefined, roleInput);
-    } else {
-      await registerWithEmail(emailInput, nameInput || 'Pengguna Baru', roleInput, securityPhraseInput);
+    setErrorMessage(null);
+    try {
+      if (tab === 'signin') {
+        await loginWithEmail(emailInput, nameInput || undefined, roleInput, passwordInput);
+      } else {
+        await registerWithEmail(emailInput, nameInput || 'Pengguna Baru', roleInput, securityPhraseInput, passwordInput);
+      }
+      if (onSelectRoleTab) onSelectRoleTab(roleInput);
+      onClose();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Login gagal.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    if (onSelectRoleTab) onSelectRoleTab(roleInput);
-    onClose();
   };
 
   const handleQuickPresetLogin = (presetIndex: number) => {
@@ -103,21 +113,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
               ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400'
               : roleInput === 'seller'
               ? 'bg-teal-500/10 border border-teal-500/30 text-teal-400'
+              : roleInput === 'courier'
+              ? 'bg-sky-500/10 border border-sky-500/30 text-sky-400'
               : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
           }`}>
-            {roleInput === 'admin' ? <Lock className="w-5 h-5" /> : roleInput === 'seller' ? <Store className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
+            {roleInput === 'admin' ? <Lock className="w-5 h-5" /> : roleInput === 'seller' ? <Store className="w-5 h-5" /> : roleInput === 'courier' ? <Truck className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
           </div>
           <h2 className="text-lg font-bold text-white tracking-tight">
             Pilih Akses Login EscrowChain Web3
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Login terpisah untuk Pembeli, Penjual UMKM, dan Admin Multi-Sig
+            Login terpisah untuk Pembeli, Penjual UMKM, Kurir, dan Admin Multi-Sig
           </p>
         </div>
 
         {/* PEMISAH PERAN: BUYER / SELLER / ADMIN */}
         <div className="p-1 bg-slate-950 rounded-xl border border-slate-800">
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             <button
               type="button"
               onClick={() => handleRoleChange('buyer')}
@@ -146,6 +158,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
 
             <button
               type="button"
+              onClick={() => handleRoleChange('courier')}
+              className={`py-2 px-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                roleInput === 'courier'
+                  ? 'bg-sky-500 text-slate-950 shadow-sm font-bold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Kurir</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => handleRoleChange('admin')}
               className={`py-2 px-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 roleInput === 'admin'
@@ -165,22 +190,26 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
             <span className="font-semibold text-white block">
               {roleInput === 'buyer' && 'Akun Demo Pembeli: Zayyini Alimatus'}
               {roleInput === 'seller' && 'Akun Demo Penjual: Parno Husni (Sentra Gadget)'}
+              {roleInput === 'courier' && 'Akun Demo Kurir: Kurir EscrowChain'}
               {roleInput === 'admin' && 'Akun Demo Admin: M. Reza D. Nur (Vault DAO)'}
             </span>
             <span className="text-[11px] text-slate-400">
               {roleInput === 'buyer' && '14.50 SOL · Belanja & Klaim Refund'}
               {roleInput === 'seller' && '38.25 SOL · Upload & Edit Produk'}
+              {roleInput === 'courier' && 'Foto bukti tiba · Konfirmasi penerima'}
               {roleInput === 'admin' && '450.00 SOL · Approve Lepas Dana'}
             </span>
           </div>
           <button
             type="button"
-            onClick={() => handleQuickPresetLogin(roleInput === 'buyer' ? 0 : roleInput === 'seller' ? 1 : 2)}
+            onClick={() => handleQuickPresetLogin(PRESET_ACCOUNTS.findIndex(account => account.role === roleInput))}
             className={`px-3 py-1.5 text-xs font-bold rounded-lg cursor-pointer whitespace-nowrap ${
               roleInput === 'admin'
                 ? 'bg-indigo-500 text-white hover:bg-indigo-400'
                 : roleInput === 'seller'
                 ? 'bg-teal-400 text-slate-950 hover:bg-teal-300'
+                : roleInput === 'courier'
+                ? 'bg-sky-400 text-slate-950 hover:bg-sky-300'
                 : 'bg-emerald-400 text-slate-950 hover:bg-emerald-300'
             }`}
           >
@@ -294,7 +323,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
           {tab === 'signup' && (
             <div>
               <label className="block text-slate-300 font-medium mb-1">
-                {roleInput === 'seller' ? 'Nama Usaha UMKM:' : 'Nama Lengkap:'}
+                {roleInput === 'seller' ? 'Nama Usaha UMKM:' : roleInput === 'courier' ? 'Nama Kurir:' : 'Nama Lengkap:'}
               </label>
               <input
                 type="text"
@@ -317,6 +346,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
             />
           </div>
 
+          <div>
+            <label className="block text-slate-300 font-medium mb-1">Kata sandi:</label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -325,10 +367,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
                 ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
                 : roleInput === 'seller'
                 ? 'bg-teal-500 hover:bg-teal-400 text-slate-950'
+                : roleInput === 'courier'
+                ? 'bg-sky-500 hover:bg-sky-400 text-slate-950'
                 : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
             }`}
           >
-            {loading ? 'Memproses...' : `Lanjutkan Masuk Portal ${roleInput === 'admin' ? 'Admin' : roleInput === 'seller' ? 'Penjual' : 'Pembeli'} →`}
+            {loading ? 'Memproses...' : `Lanjutkan Masuk Portal ${roleInput === 'admin' ? 'Admin' : roleInput === 'seller' ? 'Penjual' : roleInput === 'courier' ? 'Kurir' : 'Pembeli'} →`}
           </button>
         </form>
 

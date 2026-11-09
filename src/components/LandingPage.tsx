@@ -37,12 +37,14 @@ interface LandingPageProps {
   onEnterApp: (targetTab?: 'buyer' | 'seller' | 'admin') => void;
   onOpenAuth: (mode?: 'signin' | 'signup') => void;
   onOpenWhitepaper: () => void;
+  onOpenRoadmap: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterApp,
   onOpenAuth,
-  onOpenWhitepaper
+  onOpenWhitepaper,
+  onOpenRoadmap
 }) => {
   const { orders, tokenomics, setActiveAccount, loginWithMetaMask } = useWeb3();
 
@@ -91,6 +93,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               Whitepaper
+            </button>
+            <button
+              onClick={onOpenRoadmap}
+              className="hover:text-emerald-400 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              Roadmap
             </button>
           </nav>
 
@@ -466,6 +474,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
             <button onClick={onOpenWhitepaper} className="hover:text-slate-300 transition-colors cursor-pointer">
               Whitepaper
+            </button>
+            <button onClick={onOpenRoadmap} className="hover:text-slate-300 transition-colors cursor-pointer">
+              Roadmap
             </button>
           </div>
         </div>

@@ -85,6 +85,21 @@ export const PRESET_ACCOUNTS: Web3Account[] = [
     securityPhrase: 'AMIKOM-Solana-DeFi-Security'
   },
   {
+    address: 'C0urierEscrowChainDemo111111111111111111111',
+    label: 'Kurir (Verifikasi Pengiriman)',
+    role: 'courier',
+    name: 'Kurir Demo EscrowChain',
+    email: 'kurir.demo@escrowchain.id',
+    authMethod: 'passkey',
+    balanceSol: 0,
+    balanceAmn: 0,
+    balanceUsdc: 0,
+    stakedAmn: 0,
+    avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=EscrowChainCourier',
+    reputationScore: 100,
+    securityPhrase: 'Courier-Demo-Only'
+  },
+  {
     address: 'Fe93TechDistributorSolana1111111111111111',
     label: 'Wahyudi (Mitra Penjual Elektronik)',
     role: 'seller',

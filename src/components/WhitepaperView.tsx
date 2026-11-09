@@ -363,6 +363,7 @@ Pubkey::find_program_address(
                       <span>──(Penjual mengirim barang dan memasukkan resi)──&gt;</span>
                       <span className="text-sky-300 font-bold">Shipped</span>
                     </div>
+                    <div className="text-sky-200">Kurir ──(mengunggah foto paket di lokasi penerima dan catatan pengantaran)──&gt; Bukti pengiriman terlihat oleh pembeli; status tetap Shipped sampai pembeli mengonfirmasi.</div>
                     <div className="text-emerald-300">Shipped ──(Pembeli mengonfirmasi barang diterima)──&gt; Completed; token pembayaran dilepas ke penjual dan cashback AMN dikreditkan.</div>
                     <div className="text-rose-300">Funded/ConfirmedBySeller ──(Penjual melaporkan stok tidak tersedia)──&gt; Refunded dalam token pembayaran.</div>
                     <div className="text-amber-300">Shipped ──(Pembeli mengajukan komplain)──&gt; RefundRequested ──(Admin menyetujui)──&gt; Refunded.</div>
@@ -370,7 +371,7 @@ Pubkey::find_program_address(
                     <div className="text-amber-200">Tribunal dapat memutus pelepasan/refund setelah kuorum tercapai; alur ini masih simulasi.</div>
                   </div>
                   <p className="text-xs text-amber-300">
-                    Pembayaran dan refund mempertahankan token pembayaran awal. Gas fee tetap memerlukan SOL. Timeout bukan otomatis: pengguna memicu klaim dan prototipe menolak klaim jika barang sudah berstatus Shipped. Cashback 0,5% (bayar SOL) atau 3% (bayar AMN) baru dikreditkan ketika dana diselesaikan ke penjual, termasuk penyelesaian oleh admin/tribunal yang disetujui. Semua saldo, signature, dan perubahan status di atas adalah simulasi lokal; yield vault tidak aktif.
+                    Pembayaran dan refund mempertahankan token pembayaran awal. Gas fee tetap memerlukan SOL. Timeout bukan otomatis: pengguna memicu klaim dan prototipe menolak klaim jika barang sudah berstatus Shipped. Cashback 0,5% (bayar SOL) atau 3% (bayar AMN) baru dikreditkan ketika dana diselesaikan ke penjual, termasuk penyelesaian oleh admin/tribunal yang disetujui. Bukti foto kurir disimpan sebagai data aplikasi lokal, bukan bukti resmi dari ekspedisi atau data on-chain. Semua saldo, signature, dan perubahan status di atas adalah simulasi lokal; yield vault tidak aktif.
                   </p>
                 </div>
 
@@ -711,34 +712,71 @@ Response JSON:
                   </p>
 
                   <h3 className="text-lg font-bold text-white pt-2">
-                    Tahapan pengembangan (target, bukan komitmen tanggal)
+                    Roadmap pengembangan bertahap
                   </h3>
+                  <p className="text-xs text-slate-400">
+                    Status prototipe menggambarkan kondisi saat ini. Tahapan bertahun berikutnya adalah perkiraan perencanaan, bukan jadwal yang dijanjikan. Setiap tahap bergantung pada hasil tahap sebelumnya, kesiapan tim dan sumber daya, validasi risiko dan kepatuhan, serta keputusan untuk melanjutkan atau menunda.
+                  </p>
 
-                  <div className="space-y-3 font-mono text-xs">
-                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-emerald-400 font-bold font-sans">Tahap 1 · Validasi desain</div>
+                  <div className="relative space-y-3 border-l border-slate-700 pl-5 font-mono text-xs sm:pl-7">
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900 p-3.5">
+                      <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-emerald-400 bg-slate-950 sm:-left-[35px]" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-sans font-bold text-emerald-400">Saat ini · Prototipe dan simulasi</div>
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300">Berjalan</span>
+                      </div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Tetapkan aturan state machine, format IDL, struktur akun, kebijakan biaya, refund, serta kebutuhan kepatuhan untuk transaksi jual beli elektronik. Validasi melalui test cases sebelum menerima aset nyata.
+                        Menguji pengalaman rekening bersama melalui demo lokal: alur pembeli dan penjual, status pesanan, serta dokumentasi arsitektur. Saldo, escrow, dan transaksi masih simulasi; tidak ada aset nyata yang dikelola.
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-teal-400 font-bold font-sans">Tahap 2 · Devnet dan pengujian</div>
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900 p-3.5">
+                      <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-emerald-400 bg-slate-950 sm:-left-[35px]" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-sans font-bold text-emerald-400">01 · Fondasi dan validasi desain · Perkiraan 2027</div>
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] text-slate-400">Perkiraan</span>
+                      </div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Implementasikan wallet signing dan program escrow di Devnet; uji pembelian barang elektronik, deposit kedua token, ketersediaan produk, penyelesaian, timeout, refund, konflik, dan retry. Jangan sambungkan DeFi yield pada tahap awal.
+                        Validasi kebutuhan UMKM dan pengguna; tetapkan state machine, skema akun/IDL, kebijakan biaya dan refund, serta model ancaman. Bangun proof of concept dan test case tanpa menerima aset nyata.
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-                      <div className="text-indigo-400 font-bold font-sans">Tahap 3 · Review dan pilot terbatas</div>
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900 p-3.5">
+                      <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-teal-400 bg-slate-950 sm:-left-[35px]" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-sans font-bold text-teal-400">02 · Implementasi dan uji Devnet · Perkiraan 2028</div>
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] text-slate-400">Bersyarat</span>
+                      </div>
                       <div className="text-slate-300 mt-1 font-sans">
-                        Lakukan review keamanan independen, perbaiki temuan, siapkan monitoring dan proses insiden, lalu pilot dengan batas nominal sebelum mempertimbangkan mainnet.
+                        Jika rancangan dan sumber daya memadai, implementasikan wallet signing dan program escrow di Devnet. Uji deposit SOL/AMN, pengiriman, bukti kurir, penyelesaian, timeout, refund, sengketa, pemulihan, dan kondisi gagal. Yield tetap di luar lingkup awal.
+                      </div>
+                    </div>
+
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900 p-3.5">
+                      <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-indigo-400 bg-slate-950 sm:-left-[35px]" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-sans font-bold text-indigo-400">03 · Review independen dan pilot terbatas · Perkiraan 2029</div>
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] text-slate-400">Gerbang keamanan</span>
+                      </div>
+                      <div className="text-slate-300 mt-1 font-sans">
+                        Hanya setelah pengujian Devnet memadai: lakukan audit/review independen, tutup temuan kritis, siapkan pemantauan, dukungan, serta respons insiden, lalu uji coba dengan peserta dan batas nominal yang ditentukan. Jangan lanjut bila risiko belum dapat diterima.
+                      </div>
+                    </div>
+
+                    <div className="relative rounded-xl border border-slate-800 bg-slate-900 p-3.5">
+                      <span className="absolute -left-[27px] top-5 h-3 w-3 rounded-full border-2 border-amber-400 bg-slate-950 sm:-left-[35px]" />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-sans font-bold text-amber-400">04 · Evaluasi peluncuran dan tata kelola · 2030+</div>
+                        <span className="rounded-full border border-slate-700 px-2 py-0.5 text-[10px] text-slate-400">Keputusan belum dibuat</span>
+                      </div>
+                      <div className="text-slate-300 mt-1 font-sans">
+                        Pertimbangkan mainnet hanya jika audit, kepatuhan, operasi, keamanan, dan ekonomi protokol telah tervalidasi serta ada persetujuan eksplisit. Token AMN, governance DAO, integrasi resmi ekspedisi, dan fitur DeFi merupakan jalur terpisah yang memerlukan evaluasi serta persetujuan baru.
                       </div>
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200">
-                    Tokenomics, DAO, yield vault, Actions/Blinks, dan ekspansi lintas negara hanya dapat dipertimbangkan setelah implementasi inti, evaluasi hukum, audit, serta model operasionalnya tervalidasi.
+                    Timeline ini bersifat indikatif dan dapat bergeser atau dihentikan. Tidak menyatakan bahwa implementasi, audit, integrasi kurir, peluncuran mainnet, tokenomics, DAO, yield vault, Actions/Blinks, maupun ekspansi lintas negara telah disetujui atau dijamin terjadi.
                   </div>
 
                   <h3 className="text-lg font-bold text-white pt-4">

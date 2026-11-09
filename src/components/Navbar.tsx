@@ -18,14 +18,19 @@ import {
   Menu,
   X,
   Sparkles,
-  ArrowDownToLine
+  ArrowDownToLine,
+  Truck,
+  Cloud,
+  CloudOff,
+  LoaderCircle
 } from 'lucide-react';
 import { PRESET_ACCOUNTS } from '../data/mockData';
 import { EscrowChainLogo } from './EscrowChainLogo';
+import { LoginRole } from '../types/escrow';
 
 interface NavbarProps {
-  activeTab: 'landing' | 'auth' | 'buyer' | 'seller' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit';
-  setActiveTab: (tab: 'landing' | 'auth' | 'buyer' | 'seller' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit') => void;
+  activeTab: 'landing' | 'auth' | 'buyer' | 'seller' | 'courier' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit';
+  setActiveTab: (tab: 'landing' | 'auth' | 'buyer' | 'seller' | 'courier' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit') => void;
   openCreateModal: () => void;
   openWalletModal: () => void;
   openSecurityModal: () => void;
@@ -38,18 +43,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   openWalletModal,
   openSecurityModal
 }) => {
-  const { activeAccount, userAuth, logout, setActiveAccount } = useWeb3();
+  const { activeAccount, userAuth, logout, setActiveAccount, dataSyncStatus } = useWeb3();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
   const currentRole = activeAccount.role || userAuth.role || 'buyer';
   const isMetaMask = userAuth.method === 'metamask' || activeAccount.authMethod === 'metamask';
 
-  const handleSwitchRole = (role: 'buyer' | 'seller' | 'admin') => {
+  const handleSwitchRole = (role: LoginRole) => {
     const matched = PRESET_ACCOUNTS.find(a => a.role === role) || PRESET_ACCOUNTS[0];
     setActiveAccount(matched);
     if (role === 'buyer') setActiveTab('buyer');
     else if (role === 'seller') setActiveTab('seller');
+    else if (role === 'courier') setActiveTab('courier');
     else if (role === 'admin') setActiveTab('admin');
     setRoleDropdownOpen(false);
     setMobileMenuOpen(false);
@@ -188,6 +194,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           )}
 
+          {currentRole === 'courier' && (
+            <button
+              onClick={() => setActiveTab('courier')}
+              className={`px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'courier'
+                  ? 'bg-sky-500/15 text-sky-300 border border-sky-500/40 font-bold shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5 text-sky-400" />
+              <span>Portal Kurir</span>
+            </button>
+          )}
+
           {/* TAB PORTAL KHUSUS ADMIN & ARBITER (Hanya tampil saat peran Admin) */}
           {(currentRole === 'admin' || currentRole === 'arbiter') && (
             <>
@@ -245,6 +265,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Zone 3: Actions, Wallet, Switch Role, & Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+          <div
+            className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[10px] font-semibold border ${
+              dataSyncStatus === 'cloud'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                : dataSyncStatus === 'connecting'
+                ? 'bg-sky-500/10 border-sky-500/30 text-sky-300'
+                : dataSyncStatus === 'error'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+            }`}
+            title={dataSyncStatus === 'cloud'
+              ? 'Katalog dan pesanan tersinkron ke Supabase'
+              : dataSyncStatus === 'connecting'
+              ? 'Menghubungkan data Supabase'
+              : dataSyncStatus === 'error'
+              ? 'Sinkronisasi bermasalah; periksa konfigurasi dan izin Supabase'
+              : 'Mode demo lokal; data tidak tersinkron antarperangkat. Masuk dengan akun Supabase untuk sinkronisasi.'}
+          >
+            {dataSyncStatus === 'cloud'
+              ? <Cloud className="w-3 h-3" />
+              : dataSyncStatus === 'connecting'
+              ? <LoaderCircle className="w-3 h-3 animate-spin" />
+              : <CloudOff className="w-3 h-3" />}
+            <span className="hidden sm:inline">{dataSyncStatus === 'cloud' ? 'Cloud sync' : dataSyncStatus === 'connecting' ? 'Sync...' : dataSyncStatus === 'error' ? 'Sync error' : 'Demo lokal'}</span>
+          </div>
           
           {/* MetaMask Indicator Pill if connected via MetaMask */}
           {isMetaMask && (
@@ -263,13 +309,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300 hover:bg-indigo-900/60'
                   : currentRole === 'seller'
                   ? 'bg-teal-950/70 border-teal-500/40 text-teal-300 hover:bg-teal-900/60'
+                  : currentRole === 'courier'
+                  ? 'bg-sky-950/70 border-sky-500/40 text-sky-300 hover:bg-sky-900/60'
                   : 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60'
               }`}
               title="Akses peran Anda saat ini (Terkunci sesuai login)"
             >
               <span className="w-2 h-2 rounded-full animate-pulse bg-current" />
               <span>
-                {currentRole === 'admin' ? '🛡️ Admin Multi-Sig' : currentRole === 'seller' ? '🏪 Penjual' : '👤 Pembeli'}
+                {currentRole === 'admin' ? '🛡️ Admin Multi-Sig' : currentRole === 'seller' ? '🏪 Penjual' : currentRole === 'courier' ? '🚚 Kurir' : '👤 Pembeli'}
               </span>
               <ChevronDown className="w-3.5 h-3.5 opacity-70" />
             </button>
@@ -286,11 +334,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
                     : currentRole === 'seller'
                     ? 'bg-teal-500/15 border-teal-500/30 text-teal-300'
+                    : currentRole === 'courier'
+                    ? 'bg-sky-500/15 border-sky-500/30 text-sky-300'
                     : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
                 }`}>
                   <span className="flex items-center gap-2">
-                    {currentRole === 'admin' ? <Lock className="w-4 h-4 text-indigo-400" /> : currentRole === 'seller' ? <Store className="w-4 h-4 text-teal-400" /> : <ShoppingBag className="w-4 h-4 text-emerald-400" />}
-                    <span>{currentRole === 'admin' ? 'Portal Admin Vault' : currentRole === 'seller' ? 'Portal Penjual' : 'Portal Pembeli'}</span>
+                    {currentRole === 'admin' ? <Lock className="w-4 h-4 text-indigo-400" /> : currentRole === 'seller' ? <Store className="w-4 h-4 text-teal-400" /> : currentRole === 'courier' ? <Truck className="w-4 h-4 text-sky-400" /> : <ShoppingBag className="w-4 h-4 text-emerald-400" />}
+                    <span>{currentRole === 'admin' ? 'Portal Admin Vault' : currentRole === 'seller' ? 'Portal Penjual' : currentRole === 'courier' ? 'Portal Kurir' : 'Portal Pembeli'}</span>
                   </span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 font-bold">Aktif</span>
                 </div>
@@ -364,7 +414,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {mobileMenuOpen && (
         <div className="lg:hidden bg-slate-950 border-b border-slate-800 px-4 sm:px-6 py-3 space-y-2 text-xs animate-slide-up">
           <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-            Menu Navigasi ({currentRole === 'admin' ? 'Admin' : currentRole === 'seller' ? 'Penjual' : 'Pembeli'}):
+            Menu Navigasi ({currentRole === 'admin' ? 'Admin' : currentRole === 'seller' ? 'Penjual' : currentRole === 'courier' ? 'Kurir' : 'Pembeli'}):
           </div>
 
           {currentRole === 'buyer' && (
@@ -417,6 +467,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Alur Pengiriman</span>
               </button>
             </>
+          )}
+
+          {currentRole === 'courier' && (
+            <button
+              onClick={() => { setActiveTab('courier'); setMobileMenuOpen(false); }}
+              className="w-full text-left py-2 px-3 rounded-lg bg-sky-500/15 text-sky-300 font-bold flex items-center gap-2"
+            >
+              <Truck className="w-4 h-4" />
+              <span>Portal Kurir</span>
+            </button>
           )}
 
           {(currentRole === 'admin' || currentRole === 'arbiter') && (

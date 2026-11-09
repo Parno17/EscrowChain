@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { PRESET_ACCOUNTS } from '../data/mockData';
+import { LoginRole } from '../types/escrow';
 import { 
   ShieldCheck, 
   Lock, 
@@ -17,13 +18,14 @@ import {
   ShoppingBag,
   ShieldAlert,
   Coins,
-  Cpu
+  Cpu,
+  Truck
 } from 'lucide-react';
 
 interface AuthPageProps {
   initialMode?: 'signin' | 'signup';
-  initialRole?: 'buyer' | 'seller' | 'admin';
-  onSuccess: (targetRole?: 'buyer' | 'seller' | 'admin') => void;
+  initialRole?: LoginRole;
+  onSuccess: (targetRole?: LoginRole) => void;
   onBackToLanding: () => void;
 }
 
@@ -41,20 +43,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setActiveAccount 
   } = useWeb3();
 
-  // Role separation: 'buyer' | 'seller' | 'admin'
-  const [selectedRole, setSelectedRole] = useState<'buyer' | 'seller' | 'admin'>(initialRole);
+  const [selectedRole, setSelectedRole] = useState<LoginRole>(initialRole);
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   
   // Pre-fill email depending on selected role
-  const getRoleDefaultEmail = (r: 'buyer' | 'seller' | 'admin') => {
+  const getRoleDefaultEmail = (r: LoginRole) => {
     if (r === 'buyer') return 'z.alimatus@students.amikom.ac.id';
     if (r === 'seller') return 'parno.elektronik@gadget-official.id';
+    if (r === 'courier') return 'kurir.demo@escrowchain.id';
     return 'admin.escrow@amikom.ac.id';
   };
 
-  const getRoleDefaultName = (r: 'buyer' | 'seller' | 'admin') => {
+  const getRoleDefaultName = (r: LoginRole) => {
     if (r === 'buyer') return 'Zayyini Alimatus';
     if (r === 'seller') return 'Sentra Gadget Elektronik';
+    if (r === 'courier') return 'Kurir Demo EscrowChain';
     return 'M. Reza D. Nur (Admin Vault)';
   };
 
@@ -72,7 +75,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  const handleRoleChange = (newRole: 'buyer' | 'seller' | 'admin') => {
+  const handleRoleChange = (newRole: LoginRole) => {
     setSelectedRole(newRole);
     setEmail(getRoleDefaultEmail(newRole));
     setName(getRoleDefaultName(newRole));
@@ -153,30 +156,46 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       }
 
       setIsLoading(true);
-      await registerWithEmail(email, name, selectedRole, securityPhrase);
-      setIsLoading(false);
-      onSuccess(selectedRole);
+      try {
+        await registerWithEmail(email, name, selectedRole, securityPhrase, password);
+        onSuccess(selectedRole);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Pendaftaran gagal.');
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setIsLoading(true);
-      await loginWithEmail(email, name || undefined, selectedRole);
-      setIsLoading(false);
-      onSuccess(selectedRole);
+      try {
+        await loginWithEmail(email, name || undefined, selectedRole, password);
+        onSuccess(selectedRole);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : 'Login gagal.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleQuickDemoByRole = () => {
-    if (selectedRole === 'buyer') {
-      setActiveAccount(PRESET_ACCOUNTS[0]);
-    } else if (selectedRole === 'seller') {
-      setActiveAccount(PRESET_ACCOUNTS[1]);
-    } else {
-      setActiveAccount(PRESET_ACCOUNTS[2]);
+  const handleQuickDemoByRole = async () => {
+    const preset = PRESET_ACCOUNTS.find(account => account.role === selectedRole);
+    if (!preset) {
+      setErrorMessage('Akun demo untuk peran ini belum tersedia.');
+      return;
     }
-    onSuccess(selectedRole);
+    setIsLoading(true);
+    try {
+      await loginWithEmail(preset.email || '', preset.name, selectedRole);
+      onSuccess(selectedRole);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Login demo gagal.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
-    setInfoMessage('Tautan pemulihan kata sandi non-custodial telah dikirim ke ' + (email || 'email Anda') + '.');
+    setInfoMessage('Pemulihan kata sandi belum diaktifkan pada prototype ini. Gunakan akun demo atau atur ulang kredensial melalui Supabase Authentication.');
   };
 
   return (
@@ -212,6 +231,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   ? 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shadow-indigo-500/10'
                   : selectedRole === 'seller'
                   ? 'bg-teal-500/10 border border-teal-500/30 text-teal-400 shadow-teal-500/10'
+                  : selectedRole === 'courier'
+                  ? 'bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-sky-500/10'
                   : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-emerald-500/10'
               }`}
             >
@@ -219,6 +240,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <Lock className="w-6 h-6" />
               ) : selectedRole === 'seller' ? (
                 <Store className="w-6 h-6" />
+              ) : selectedRole === 'courier' ? (
+                <Truck className="w-6 h-6" />
               ) : (
                 <ShoppingBag className="w-6 h-6" />
               )}
@@ -227,11 +250,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <h1 className="text-2xl font-bold tracking-tight text-white">
               {selectedRole === 'buyer' && (mode === 'signin' ? 'Login Portal Pembeli' : 'Daftar Akun Pembeli')}
               {selectedRole === 'seller' && (mode === 'signin' ? 'Login Portal Penjual UMKM' : 'Daftar Mitra Penjual')}
+              {selectedRole === 'courier' && (mode === 'signin' ? 'Login Portal Kurir' : 'Daftar Akun Kurir')}
               {selectedRole === 'admin' && (mode === 'signin' ? 'Login Portal Admin & Arbiter' : 'Registrasi Otoritas Multi-Sig')}
             </h1>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               {selectedRole === 'buyer' && 'Akses belanja aman barang elektronik UMKM dengan jaminan auto-refund dan cashback $AMN.'}
               {selectedRole === 'seller' && 'Kelola etalase produk UMKM, unggah foto barang, kirim resi, dan klaim bonus 40% DeFi yield.'}
+              {selectedRole === 'courier' && 'Lihat pesanan yang sedang dikirim dan unggah foto bukti paket sudah tiba di alamat penerima.'}
               {selectedRole === 'admin' && 'Otoritas DAO Multi-Sig untuk approve pelepasan dana escrow, verifikasi refund, dan arbitrase.'}
             </p>
           </div>
@@ -241,7 +266,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2 py-1 mb-1">
               Pilih Portal Akses Login:
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               <button
                 type="button"
                 onClick={() => handleRoleChange('buyer')}
@@ -266,6 +291,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               >
                 <Store className="w-4 h-4 shrink-0" />
                 <span>Penjual</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleRoleChange('courier')}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  selectedRole === 'courier'
+                    ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+              >
+                <Truck className="w-4 h-4 shrink-0" />
+                <span>Kurir</span>
               </button>
 
               <button
@@ -354,7 +392,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <div className="text-xs font-bold text-white flex items-center gap-1.5">
                       <span>Hubungkan MetaMask</span>
                       <span className="text-[10px] font-mono text-amber-400 font-semibold px-1 rounded bg-amber-500/20">
-                        {selectedRole === 'admin' ? 'Admin Vault' : selectedRole === 'seller' ? 'Penjual UMKM' : 'Pembeli'}
+                        {selectedRole === 'admin' ? 'Admin Vault' : selectedRole === 'seller' ? 'Penjual UMKM' : selectedRole === 'courier' ? 'Kurir' : 'Pembeli'}
                       </span>
                     </div>
                   </div>
@@ -443,7 +481,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               {mode === 'signup' && (
                 <div>
                   <label className="block text-slate-300 font-medium mb-1">
-                    {selectedRole === 'seller' ? 'Nama Toko / Usaha UMKM:' : selectedRole === 'admin' ? 'Nama Lengkap Otoritas Admin:' : 'Nama Lengkap Pembeli:'}
+                    {selectedRole === 'seller' ? 'Nama Toko / Usaha UMKM:' : selectedRole === 'admin' ? 'Nama Lengkap Otoritas Admin:' : selectedRole === 'courier' ? 'Nama Kurir:' : 'Nama Lengkap Pembeli:'}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
@@ -647,8 +685,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 {isLoading 
                   ? 'Memvalidasi Kunci Solana...' 
                   : mode === 'signin' 
-                  ? `Masuk ke Portal ${selectedRole === 'admin' ? 'Admin' : selectedRole === 'seller' ? 'Penjual' : 'Pembeli'} →` 
-                  : `Daftar Akun ${selectedRole === 'admin' ? 'Admin' : selectedRole === 'seller' ? 'Penjual' : 'Pembeli'} →`}
+                  ? `Masuk ke Portal ${selectedRole === 'admin' ? 'Admin' : selectedRole === 'seller' ? 'Penjual' : selectedRole === 'courier' ? 'Kurir' : 'Pembeli'} →`
+                  : `Daftar Akun ${selectedRole === 'admin' ? 'Admin' : selectedRole === 'seller' ? 'Penjual' : selectedRole === 'courier' ? 'Kurir' : 'Pembeli'} →`}
               </button>
             </form>
 

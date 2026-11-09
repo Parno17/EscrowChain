@@ -191,6 +191,29 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           </div>
         )}
 
+        {order.courierDeliveryProof && (
+          <div className="space-y-3 rounded-xl border border-sky-500/30 bg-sky-950/20 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-sky-200">
+              <Truck className="h-4 w-4" />
+              Bukti foto dari kurir
+            </div>
+            <img
+              src={order.courierDeliveryProof.photoDataUrl}
+              alt={`Bukti paket pesanan ${order.id} tiba di lokasi penerima`}
+              className="max-h-80 w-full rounded-lg border border-slate-700 bg-slate-950 object-contain"
+            />
+            <div className="text-xs text-slate-300">
+              <p>{order.courierDeliveryProof.deliveryNote || 'Paket diletakkan di depan pintu penerima.'}</p>
+              <p className="mt-1 text-slate-400">
+                Dicatat oleh {order.courierDeliveryProof.deliveredBy} · {new Date(order.courierDeliveryProof.deliveredAt).toLocaleString('id-ID')}
+              </p>
+            </div>
+            <p className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-3 text-[11px] leading-relaxed text-amber-200">
+              Foto ini merupakan bukti pada prototipe, bukan verifikasi resmi dari ekspedisi. Periksa kondisi barang; escrow baru selesai setelah pembeli mengonfirmasi penerimaan.
+            </p>
+          </div>
+        )}
+
         {/* Refund Status Alerts (Point 3) */}
         {order.status === OrderStatus.RefundRequested && (
           <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs space-y-2">

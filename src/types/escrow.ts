@@ -10,7 +10,16 @@ export enum OrderStatus {
 }
 
 export type InitiatorType = 'buyer' | 'seller';
+export type AccountRole = 'buyer' | 'seller' | 'courier' | 'admin' | 'arbiter';
+export type LoginRole = 'buyer' | 'seller' | 'courier' | 'admin';
 export type PaymentToken = 'SOL' | 'AMN';
+
+export interface CourierDeliveryProof {
+  photoDataUrl: string;
+  deliveredAt: number;
+  deliveredBy: string;
+  deliveryNote?: string;
+}
 
 export interface EscrowOrder {
   id: number;
@@ -56,11 +65,13 @@ export interface EscrowOrder {
   
   // Detail Barang Elektronik / UMKM
   productName: string;
+  productId?: string;
   category: string;
   selectedVariation?: string;
   quantity: number;
   courierTracking?: string;
   courierName?: string;
+  courierDeliveryProof?: CourierDeliveryProof;
   
   // Skenario Penjual & Pembeli
   outOfStockReason?: string;
@@ -117,7 +128,7 @@ export interface UserAuth {
   displayName: string;
   avatarUrl?: string;
   walletAddress: string; // Solana Base58 or EVM Address
-  role: 'buyer' | 'seller' | 'admin' | 'arbiter';
+  role: AccountRole;
   securityPhrase?: string; // Anti-Phishing secret phrase
   is2FAActive?: boolean;
   reputationScore?: number; // 0 - 100 on-chain rating
@@ -128,7 +139,7 @@ export interface UserAuth {
 export interface Web3Account {
   address: string;          // Solana Base58 or EVM address
   label: string;
-  role: 'buyer' | 'seller' | 'admin' | 'arbiter';
+  role: AccountRole;
   name: string;
   email?: string;
   authMethod?: 'phantom' | 'solflare' | 'backpack' | 'metamask' | 'passkey';

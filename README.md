@@ -14,6 +14,13 @@ https://ai.studio/apps/a38d37dc-1888-4013-bb1e-c0237f6aa879
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in `.env.local` to your Gemini API key, if using Gemini features.
-3. Run the app:
+2. Copy `.env.example` to `.env.local`. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to enable shared catalog and order data. `GEMINI_API_KEY` is only needed for Gemini features.
+3. In the Supabase SQL Editor, run [`supabase/schema.sql`](./supabase/schema.sql). Enable email/password sign-in in Supabase Authentication. Set the Auth Site URL and allowed redirect URLs to your local and Vercel app URLs.
+4. Run the app:
    `npm run dev`
+
+Without Supabase settings, the app remains in local demo mode and changes are stored only in that browser. Demo balances, gas fees, transaction signatures, and escrow actions remain simulated; this integration does not submit blockchain transactions. Configure the same `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel Project Settings → Environment Variables for Preview and Production, then redeploy.
+
+Use the Supabase anon/publishable key in the frontend, never the `service_role` key. The SQL policies restrict catalog changes to the owning seller and order changes to the buyer or seller. Demo/preset accounts do not use Supabase Auth and therefore do not synchronize their changes across devices; use email sign-up/sign-in for cloud synchronization.
+
+This is still a prototype: simulated balances and escrow statuses are not financial records, and the UI's demo roles are not production-grade authorization for privileged actions.

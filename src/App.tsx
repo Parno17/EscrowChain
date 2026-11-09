@@ -10,10 +10,12 @@ import { WalletModal } from './components/WalletModal';
 import { LoginModal } from './components/LoginModal';
 import { BuyerPortal } from './components/BuyerPortal';
 import { SellerPortal } from './components/SellerPortal';
+import { CourierPortal } from './components/CourierPortal';
 import { AdminVaultPortal } from './components/AdminVaultPortal';
 import { SequenceDiagramView } from './components/SequenceDiagramView';
 import { AmanahDefiHub } from './components/AmanahDefiHub';
 import { WhitepaperView } from './components/WhitepaperView';
+import { RoadmapView } from './components/RoadmapView';
 import { SolanaAuditView } from './components/SolanaAuditView';
 import { UserSecurityModal } from './components/UserSecurityModal';
 import { AcademicReportModal } from './components/AcademicReportModal';
@@ -62,7 +64,7 @@ function DashboardContent() {
 
   // Active Tab: starts with 'landing' as requested
   const [activeTab, setActiveTab] = useState<
-    'landing' | 'auth' | 'buyer' | 'seller' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit'
+    'landing' | 'roadmap' | 'auth' | 'buyer' | 'seller' | 'courier' | 'admin' | 'defi' | 'sequence' | 'whitepaper' | 'audit'
   >('landing');
 
   // Initial mode for dedicated Auth page ('signin' or 'signup')
@@ -78,7 +80,7 @@ function DashboardContent() {
 
   // Guard: If logged out and not on landing or auth, redirect to Auth
   React.useEffect(() => {
-    if (!userAuth.isLoggedIn && activeTab !== 'landing' && activeTab !== 'auth') {
+    if (!userAuth.isLoggedIn && activeTab !== 'landing' && activeTab !== 'roadmap' && activeTab !== 'auth') {
       setActiveTab('auth');
     }
   }, [userAuth.isLoggedIn, activeTab]);
@@ -91,6 +93,8 @@ function DashboardContent() {
         setActiveTab('buyer');
       } else if (currentRole === 'seller' && (activeTab === 'buyer' || activeTab === 'admin' || activeTab === 'audit')) {
         setActiveTab('seller');
+      } else if (currentRole === 'courier' && (activeTab === 'buyer' || activeTab === 'seller' || activeTab === 'admin' || activeTab === 'audit')) {
+        setActiveTab('courier');
       } else if ((currentRole === 'admin' || currentRole === 'arbiter') && (activeTab === 'buyer' || activeTab === 'seller')) {
         setActiveTab('admin');
       }
@@ -108,6 +112,7 @@ function DashboardContent() {
             setActiveTab('auth');
           }}
           onOpenWhitepaper={() => setActiveTab('whitepaper')}
+          onOpenRoadmap={() => setActiveTab('roadmap')}
         />
 
         {/* Academic Research Archive Modal */}
@@ -116,6 +121,15 @@ function DashboardContent() {
           onClose={() => setIsAcademicModalOpen(false)}
         />
       </>
+    );
+  }
+
+  if (activeTab === 'roadmap') {
+    return (
+      <RoadmapView
+        onBack={() => setActiveTab('landing')}
+        onOpenWhitepaper={() => setActiveTab('whitepaper')}
+      />
     );
   }
 
@@ -128,6 +142,7 @@ function DashboardContent() {
           onSuccess={(targetRole) => {
             if (targetRole === 'admin') setActiveTab('admin');
             else if (targetRole === 'seller') setActiveTab('seller');
+            else if (targetRole === 'courier') setActiveTab('courier');
             else setActiveTab('buyer');
           }}
           onBackToLanding={() => setActiveTab('landing')}
@@ -232,21 +247,26 @@ function DashboardContent() {
                   ? 'bg-indigo-950/70 border-indigo-500/40 text-indigo-300'
                   : activeAccount.role === 'seller'
                   ? 'bg-teal-950/70 border-teal-500/40 text-teal-300'
+                  : activeAccount.role === 'courier'
+                  ? 'bg-sky-950/70 border-sky-500/40 text-sky-300'
                   : 'bg-emerald-950/70 border-emerald-500/40 text-emerald-300'
               }`}>
                 {activeAccount.role === 'admin'
                   ? '🔒 Tab Terkunci: Hanya Fitur Admin Multi-Sig'
                   : activeAccount.role === 'seller'
                   ? '🏪 Tab Terkunci: Hanya Fitur Penjual UMKM'
+                  : activeAccount.role === 'courier'
+                  ? '🚚 Tab Terkunci: Hanya Fitur Kurir'
                   : '🛒 Tab Terkunci: Hanya Fitur Pembeli'}
               </span>
             </div>
             <div className="flex items-center gap-1.5 p-1 bg-slate-950 rounded-lg border border-slate-800">
-              {PRESET_ACCOUNTS.slice(0, 3)
+              {PRESET_ACCOUNTS
                 .filter((acc) => {
                   const currentRole = activeAccount.role || userAuth.role || 'buyer';
                   if (currentRole === 'buyer') return acc.role === 'buyer';
                   if (currentRole === 'seller') return acc.role === 'seller';
+                  if (currentRole === 'courier') return acc.role === 'courier';
                   if (currentRole === 'admin' || currentRole === 'arbiter') return acc.role === 'admin' || acc.role === 'arbiter';
                   return acc.role === currentRole;
                 })
@@ -259,6 +279,7 @@ function DashboardContent() {
                         setActiveAccount(acc);
                         if (acc.role === 'buyer') setActiveTab('buyer');
                         else if (acc.role === 'seller') setActiveTab('seller');
+                        else if (acc.role === 'courier') setActiveTab('courier');
                         else if (acc.role === 'admin' || acc.role === 'arbiter') setActiveTab('admin');
                       }}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap cursor-pointer ${
@@ -267,6 +288,8 @@ function DashboardContent() {
                             ? 'bg-indigo-600 text-white shadow-sm font-bold'
                             : acc.role === 'seller'
                             ? 'bg-teal-500 text-slate-950 shadow-sm font-bold'
+                            : acc.role === 'courier'
+                            ? 'bg-sky-500 text-slate-950 shadow-sm font-bold'
                             : 'bg-emerald-500 text-slate-950 shadow-sm font-bold'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
@@ -340,6 +363,10 @@ function DashboardContent() {
         {/* TAB 2: PORTAL PENJUAL */}
         {activeTab === 'seller' && (
           <SellerPortal />
+        )}
+
+        {activeTab === 'courier' && (
+          <CourierPortal />
         )}
 
         {/* TAB 3: AMANAH DEFI HUB ($AMN) */}
@@ -443,6 +470,7 @@ function DashboardContent() {
         onSelectRoleTab={(role) => {
           if (role === 'admin') setActiveTab('admin');
           else if (role === 'seller') setActiveTab('seller');
+          else if (role === 'courier') setActiveTab('courier');
           else setActiveTab('buyer');
         }}
       />
