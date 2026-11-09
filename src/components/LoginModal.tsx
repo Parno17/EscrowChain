@@ -31,7 +31,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
 
   const [emailInput, setEmailInput] = useState(() => getRoleEmail('buyer'));
   const [nameInput, setNameInput] = useState(() => getRoleName('buyer'));
-  const [passwordInput, setPasswordInput] = useState('');
   const [securityPhraseInput, setSecurityPhraseInput] = useState('Garuda-Solana-Proteksi-2026');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -68,20 +67,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage(null);
-    try {
-      if (tab === 'signin') {
-        await loginWithEmail(emailInput, nameInput || undefined, roleInput, passwordInput);
-      } else {
-        await registerWithEmail(emailInput, nameInput || 'Pengguna Baru', roleInput, securityPhraseInput, passwordInput);
-      }
-      if (onSelectRoleTab) onSelectRoleTab(roleInput);
-      onClose();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Login gagal.');
-    } finally {
-      setLoading(false);
+    if (tab === 'signin') {
+      await loginWithEmail(emailInput, nameInput || undefined, roleInput);
+    } else {
+      await registerWithEmail(emailInput, nameInput || 'Pengguna Baru', roleInput, securityPhraseInput);
     }
+    setLoading(false);
+    if (onSelectRoleTab) onSelectRoleTab(roleInput);
+    onClose();
   };
 
   const handleQuickPresetLogin = (presetIndex: number) => {
@@ -342,19 +335,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSelec
               required
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-slate-300 font-medium mb-1">Kata sandi:</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-emerald-500"
             />
           </div>

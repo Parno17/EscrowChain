@@ -19,10 +19,7 @@ import {
   X,
   Sparkles,
   ArrowDownToLine,
-  Truck,
-  Cloud,
-  CloudOff,
-  LoaderCircle
+  Truck
 } from 'lucide-react';
 import { PRESET_ACCOUNTS } from '../data/mockData';
 import { EscrowChainLogo } from './EscrowChainLogo';
@@ -43,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   openWalletModal,
   openSecurityModal
 }) => {
-  const { activeAccount, userAuth, logout, setActiveAccount, dataSyncStatus } = useWeb3();
+  const { activeAccount, userAuth, logout, setActiveAccount } = useWeb3();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
 
@@ -266,32 +263,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Zone 3: Actions, Wallet, Switch Role, & Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          <div
-            className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg text-[10px] font-semibold border ${
-              dataSyncStatus === 'cloud'
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                : dataSyncStatus === 'connecting'
-                ? 'bg-sky-500/10 border-sky-500/30 text-sky-300'
-                : dataSyncStatus === 'error'
-                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-            }`}
-            title={dataSyncStatus === 'cloud'
-              ? 'Katalog dan pesanan tersinkron ke Supabase'
-              : dataSyncStatus === 'connecting'
-              ? 'Menghubungkan data Supabase'
-              : dataSyncStatus === 'error'
-              ? 'Sinkronisasi bermasalah; periksa konfigurasi dan izin Supabase'
-              : 'Mode demo lokal; data tidak tersinkron antarperangkat. Masuk dengan akun Supabase untuk sinkronisasi.'}
-          >
-            {dataSyncStatus === 'cloud'
-              ? <Cloud className="w-3 h-3" />
-              : dataSyncStatus === 'connecting'
-              ? <LoaderCircle className="w-3 h-3 animate-spin" />
-              : <CloudOff className="w-3 h-3" />}
-            <span className="hidden sm:inline">{dataSyncStatus === 'cloud' ? 'Cloud sync' : dataSyncStatus === 'connecting' ? 'Sync...' : dataSyncStatus === 'error' ? 'Sync error' : 'Demo lokal'}</span>
-          </div>
-          
           {/* MetaMask Indicator Pill if connected via MetaMask */}
           {isMetaMask && (
             <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300 shadow-sm" title="Terhubung melalui dompet MetaMask EVM">

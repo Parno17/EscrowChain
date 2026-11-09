@@ -65,7 +65,6 @@ export interface EscrowOrder {
   
   // Detail Barang Elektronik / UMKM
   productName: string;
-  productId?: string;
   category: string;
   selectedVariation?: string;
   quantity: number;

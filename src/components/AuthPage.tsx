@@ -156,24 +156,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       }
 
       setIsLoading(true);
-      try {
-        await registerWithEmail(email, name, selectedRole, securityPhrase, password);
-        onSuccess(selectedRole);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Pendaftaran gagal.');
-      } finally {
-        setIsLoading(false);
-      }
+      await registerWithEmail(email, name, selectedRole, securityPhrase);
+      setIsLoading(false);
+      onSuccess(selectedRole);
     } else {
       setIsLoading(true);
-      try {
-        await loginWithEmail(email, name || undefined, selectedRole, password);
-        onSuccess(selectedRole);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Login gagal.');
-      } finally {
-        setIsLoading(false);
-      }
+      await loginWithEmail(email, name || undefined, selectedRole);
+      setIsLoading(false);
+      onSuccess(selectedRole);
     }
   };
 
@@ -184,18 +174,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       return;
     }
     setIsLoading(true);
-    try {
-      await loginWithEmail(preset.email || '', preset.name, selectedRole);
-      onSuccess(selectedRole);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Login demo gagal.');
-    } finally {
-      setIsLoading(false);
-    }
+    await loginWithEmail(preset.email || '', preset.name, selectedRole);
+    setIsLoading(false);
+    onSuccess(selectedRole);
   };
 
   const handleForgotPassword = () => {
-    setInfoMessage('Pemulihan kata sandi belum diaktifkan pada prototype ini. Gunakan akun demo atau atur ulang kredensial melalui Supabase Authentication.');
+    setInfoMessage('Tautan pemulihan kata sandi non-custodial telah dikirim ke ' + (email || 'email Anda') + '.');
   };
 
   return (

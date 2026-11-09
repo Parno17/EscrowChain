@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   EscrowOrder, 
@@ -26,52 +26,6 @@ import {
   TOKENOMICS_INFO,
   DEFI_YIELD_VAULT_PDA
 } from '../data/mockData';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
-
-type DataSyncStatus = 'local' | 'connecting' | 'cloud' | 'error';
-
-const mergeById = <T extends { id: string | number }>(primary: T[], fallback: T[]): T[] => {
-  const merged = new Map<string | number, T>();
-  fallback.forEach(item => merged.set(item.id, item));
-  primary.forEach(item => merged.set(item.id, item));
-  return [...merged.values()];
-};
-
-const toSnapshot = <T extends { id: string | number }>(items: T[]) =>
-  new Map(items.map(item => [item.id, JSON.stringify(item)]));
-
-const getRoleFromUser = (role: unknown): LoginRole =>
-  role === 'seller' || role === 'courier' || role === 'admin' ? role : 'buyer';
-
-const createAccountFromSupabaseUser = (
-  user: { id: string; email?: string; user_metadata?: Record<string, unknown> },
-  fallbackName?: string,
-  fallbackRole?: LoginRole
-): Web3Account => {
-  const role = getRoleFromUser(user.user_metadata?.role ?? fallbackRole);
-  const email = user.email || '';
-  const name = typeof user.user_metadata?.name === 'string'
-    ? user.user_metadata.name
-    : fallbackName || email.split('@')[0] || 'Pengguna EscrowChain';
-  return {
-    address: user.id,
-    label: role === 'buyer' ? 'Pembeli Terdaftar' : role === 'seller' ? 'Penjual UMKM Resmi' : role === 'courier' ? 'Kurir Pengiriman' : 'Admin Protocol Terverifikasi',
-    role,
-    name,
-    email,
-    authMethod: 'passkey',
-    balanceSol: role === 'admin' ? 450 : role === 'seller' ? 20 : role === 'courier' ? 0 : 10,
-    balanceAmn: role === 'admin' ? 250000 : role === 'seller' ? 10000 : role === 'courier' ? 0 : 2000,
-    balanceUsdc: role === 'admin' ? 95000 : 1000,
-    stakedAmn: role === 'admin' ? 85000 : 1500,
-    avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`,
-    businessName: role === 'seller' ? `${name} Official Store` : role === 'admin' ? 'Otoritas Rekber Smart Contract' : role === 'courier' ? 'Kurir Demo (bukan integrasi ekspedisi)' : 'Konsumen Terdaftar',
-    reputationScore: 98,
-    securityPhrase: typeof user.user_metadata?.securityPhrase === 'string'
-      ? user.user_metadata.securityPhrase
-      : 'Solana-Amanah-Proteksi-AntiPhishing'
-  };
-};
 
 const getOrderPaymentToken = (order: EscrowOrder): PaymentToken => order.paymentToken ?? 'SOL';
 
@@ -92,7 +46,6 @@ interface Web3ContextType {
   activeAccount: Web3Account;
   allAccounts: Web3Account[];
   userAuth: UserAuth;
-  dataSyncStatus: DataSyncStatus;
   tokenomics: TokenomicsMetric;
   isProtocolPaused: boolean;
   currentSlot: number;
@@ -103,8 +56,8 @@ interface Web3ContextType {
   // Auth & Account Management
   loginWithWallet: (walletType: 'phantom' | 'solflare' | 'backpack') => Promise<void>;
   loginWithMetaMask: (role?: LoginRole) => Promise<{ success: boolean; address?: string; error?: string }>;
-  loginWithEmail: (email: string, name?: string, role?: LoginRole, password?: string) => Promise<void>;
-  registerWithEmail: (email: string, name: string, role: LoginRole, securityPhrase?: string, password?: string) => Promise<void>;
+  loginWithEmail: (email: string, name?: string, role?: LoginRole) => Promise<void>;
+  registerWithEmail: (email: string, name: string, role: LoginRole, securityPhrase?: string) => Promise<void>;
   logout: () => void;
   setActiveAccount: (account: Web3Account) => void;
   updateSecurityPhrase: (newPhrase: string) => void;
@@ -200,11 +153,6 @@ function generateSolanaPda(orderId: number): string {
   return pda;
 }
 
-function generateOrderId(orders: EscrowOrder[]): number {
-  const timestampId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
-  return Math.max(timestampId, ...orders.map(order => order.id + 1));
-}
-
 export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<EscrowOrder[]>(() => {
     const saved = localStorage.getItem('amanah_solana_orders');
@@ -238,15 +186,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return saved ? JSON.parse(saved) : TOKENOMICS_INFO;
   });
 
-  const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null);
-  const [cloudDataReady, setCloudDataReady] = useState(false);
-  const [dataSyncStatus, setDataSyncStatus] = useState<DataSyncStatus>('local');
-  const cloudDataReadyRef = useRef(false);
-  const cloudProductIds = useRef<Set<string>>(new Set());
-  const productSnapshot = useRef<Map<string | number, string>>(new Map());
-  const orderSnapshot = useRef<Map<string | number, string>>(new Map());
-  const saveQueue = useRef<Promise<void>>(Promise.resolve());
-
   const [isProtocolPaused, setIsProtocolPaused] = useState(false);
   const [currentSlot, setCurrentSlot] = useState(289410291);
   const [simulatedTimeOffsetMs, setSimulatedTimeOffsetMs] = useState(0);
@@ -266,12 +205,12 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Keep local storage in sync
   useEffect(() => {
-    if (!supabaseUserId) localStorage.setItem('amanah_solana_orders', JSON.stringify(orders));
-  }, [orders, supabaseUserId]);
+    localStorage.setItem('amanah_solana_orders', JSON.stringify(orders));
+  }, [orders]);
 
   useEffect(() => {
-    if (!supabaseUserId) localStorage.setItem('amanah_solana_products', JSON.stringify(products));
-  }, [products, supabaseUserId]);
+    localStorage.setItem('amanah_solana_products', JSON.stringify(products));
+  }, [products]);
 
   useEffect(() => {
     localStorage.setItem('amanah_solana_accounts', JSON.stringify(allAccounts));
@@ -293,232 +232,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     localStorage.setItem('amanah_tokenomics', JSON.stringify(tokenomics));
   }, [tokenomics]);
-
-  useEffect(() => {
-    if (!supabase) return;
-
-    let active = true;
-    const activateSession = (user: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null) => {
-      if (!user) {
-        setSupabaseUserId(null);
-        const savedOrders = localStorage.getItem('amanah_solana_orders');
-        const savedProducts = localStorage.getItem('amanah_solana_products');
-        if (savedOrders) setOrders(JSON.parse(savedOrders));
-        else setOrders(INITIAL_ORDERS);
-        if (savedProducts) setProducts(JSON.parse(savedProducts));
-        else setProducts(INITIAL_ELECTRONIC_PRODUCTS);
-        return;
-      }
-
-      const account = createAccountFromSupabaseUser(user);
-      cloudDataReadyRef.current = false;
-      setCloudDataReady(false);
-      setProducts(INITIAL_ELECTRONIC_PRODUCTS);
-      setOrders(INITIAL_ORDERS);
-      setSupabaseUserId(user.id);
-      setActiveAccountState(previous => previous.address === user.id
-        ? { ...account, balanceSol: previous.balanceSol, balanceAmn: previous.balanceAmn, balanceUsdc: previous.balanceUsdc, stakedAmn: previous.stakedAmn }
-        : account);
-      setAllAccounts(previous => previous.some(item => item.address === user.id)
-        ? previous.map(item => item.address === user.id ? account : item)
-        : [...previous, account]);
-      setUserAuth({
-        isLoggedIn: true,
-        method: 'email',
-        email: user.email,
-        displayName: account.name,
-        avatarUrl: account.avatarUrl,
-        walletAddress: account.address,
-        role: account.role,
-        securityPhrase: account.securityPhrase,
-        reputationScore: account.reputationScore,
-        stakedAmn: account.stakedAmn,
-        vipTier: account.stakedAmn >= 5000 ? 'Amanah VIP Gold' : 'Standard'
-      });
-    };
-
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (!active) return;
-      if (error) {
-        setDataSyncStatus('error');
-        showNotification('error', `Gagal memulihkan sesi Supabase: ${error.message}`);
-        return;
-      }
-      activateSession(data.session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      activateSession(session?.user ?? null);
-      if (!session) setCloudDataReady(false);
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!supabase || !supabaseUserId) {
-      cloudDataReadyRef.current = false;
-      setCloudDataReady(false);
-      setDataSyncStatus('local');
-      return;
-    }
-
-    const client = supabase;
-    let active = true;
-    cloudDataReadyRef.current = false;
-    setCloudDataReady(false);
-    setDataSyncStatus('connecting');
-
-    const mergeCloudProducts = (rows: ElectronicProduct[]) =>
-      mergeById(rows, INITIAL_ELECTRONIC_PRODUCTS);
-    const mergeCloudOrders = (rows: EscrowOrder[]) =>
-      mergeById(rows, INITIAL_ORDERS);
-
-    const loadCloudData = async () => {
-      const [productResult, orderResult] = await Promise.all([
-        client.from('products').select('id, payload'),
-        client.from('orders').select('id, payload')
-      ]);
-      if (productResult.error) throw productResult.error;
-      if (orderResult.error) throw orderResult.error;
-      if (!active) return;
-
-      const cloudProducts = (productResult.data || []).map(row => row.payload as ElectronicProduct);
-      const cloudOrders = (orderResult.data || []).map(row => row.payload as EscrowOrder);
-      cloudProductIds.current = new Set(cloudProducts.map(product => product.id));
-      const nextProducts = mergeCloudProducts(cloudProducts);
-      const nextOrders = mergeCloudOrders(cloudOrders);
-      productSnapshot.current = toSnapshot(nextProducts);
-      orderSnapshot.current = toSnapshot(nextOrders);
-      setProducts(nextProducts);
-      setOrders(nextOrders);
-      cloudDataReadyRef.current = true;
-      setCloudDataReady(true);
-      setDataSyncStatus('cloud');
-    };
-
-    loadCloudData().catch(error => {
-      if (!active) return;
-      setDataSyncStatus('error');
-      showNotification('error', `Gagal memuat data Supabase: ${error instanceof Error ? error.message : String(error)}`);
-    });
-
-    const channel = client
-      .channel(`escrowchain-data-${supabaseUserId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
-        if (!active || !cloudDataReadyRef.current) return;
-        const row = payload.eventType === 'DELETE' ? payload.old : payload.new;
-        const changed = row as { id?: string; payload?: ElectronicProduct } | null;
-        if (!changed?.id) return;
-        if (payload.eventType === 'DELETE') cloudProductIds.current.delete(changed.id);
-        else cloudProductIds.current.add(changed.id);
-        setProducts(current => {
-          const next = payload.eventType === 'DELETE'
-            ? current.filter(item => item.id !== changed.id)
-            : mergeCloudProducts([...(current.filter(item => item.id !== changed.id)), changed.payload!]);
-          productSnapshot.current = toSnapshot(next);
-          return next;
-        });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-        if (!active || !cloudDataReadyRef.current) return;
-        const row = payload.eventType === 'DELETE' ? payload.old : payload.new;
-        const changed = row as { id?: number; payload?: EscrowOrder } | null;
-        if (changed?.id === undefined) return;
-        setOrders(current => {
-          const next = payload.eventType === 'DELETE'
-            ? current.filter(item => item.id !== changed.id)
-            : mergeCloudOrders([...(current.filter(item => item.id !== changed.id)), changed.payload!]);
-          orderSnapshot.current = toSnapshot(next);
-          return next;
-        });
-      })
-      .subscribe(status => {
-        if (active && status === 'CHANNEL_ERROR') {
-          setDataSyncStatus('error');
-          showNotification('error', 'Realtime Supabase gagal tersambung. Muat ulang halaman untuk mencoba kembali.');
-        }
-      });
-
-    return () => {
-      active = false;
-      cloudDataReadyRef.current = false;
-      void client.removeChannel(channel);
-    };
-  }, [supabaseUserId]);
-
-  useEffect(() => {
-    if (!supabase || !supabaseUserId || !cloudDataReady) return;
-
-    const client = supabase;
-    const previous = productSnapshot.current;
-    const current = toSnapshot(products);
-    const changed = products.filter(product => previous.get(product.id) !== JSON.stringify(product));
-    const deleted = [...previous.keys()].filter(id => !current.has(id));
-    productSnapshot.current = current;
-
-    saveQueue.current = saveQueue.current.then(async () => {
-      for (const product of changed) {
-        const { error } = await client.from('products').upsert({
-          id: product.id,
-          seller_address: product.sellerAddress,
-          payload: product,
-          updated_at: new Date().toISOString()
-        });
-        if (error) throw error;
-        cloudProductIds.current.add(product.id);
-      }
-      for (const id of deleted) {
-        const { error } = await client.from('products').delete()
-          .eq('id', id)
-          .eq('seller_address', supabaseUserId);
-        if (error) throw error;
-      }
-    }).catch(error => {
-      setDataSyncStatus('error');
-      showNotification('error', `Gagal menyimpan katalog ke Supabase: ${error instanceof Error ? error.message : String(error)}`);
-    });
-  }, [products, supabaseUserId, cloudDataReady]);
-
-  useEffect(() => {
-    if (!supabase || !supabaseUserId || !cloudDataReady) return;
-
-    const client = supabase;
-    const previous = orderSnapshot.current;
-    const current = toSnapshot(orders);
-    const changed = orders.filter(order => previous.get(order.id) !== JSON.stringify(order));
-    const deleted = [...previous.keys()].filter(id => !current.has(id));
-    orderSnapshot.current = current;
-
-    saveQueue.current = saveQueue.current.then(async () => {
-      for (const order of changed) {
-        const row = {
-          buyer_address: order.buyer,
-          seller_address: order.seller,
-          payload: order,
-          updated_at: new Date().toISOString()
-        };
-        const existing = previous.has(order.id);
-        const result = existing
-          ? await client.from('orders').update(row).eq('id', order.id).select('id')
-          : await client.from('orders').insert({ id: order.id, ...row }).select('id');
-        if (result.error) throw result.error;
-        if (!result.data?.length) throw new Error(`Tidak punya izin menyimpan pesanan #${order.id}.`);
-      }
-      for (const id of deleted) {
-        const { error } = await client.from('orders').delete()
-          .eq('id', id)
-          .eq('buyer_address', supabaseUserId);
-        if (error) throw error;
-      }
-    }).catch(error => {
-      setDataSyncStatus('error');
-      showNotification('error', `Gagal menyimpan pesanan ke Supabase: ${error instanceof Error ? error.message : String(error)}`);
-    });
-  }, [orders, supabaseUserId, cloudDataReady]);
 
   // Tick Solana slot counter periodically
   useEffect(() => {
@@ -543,29 +256,13 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const dismissNotification = () => setNotification(null);
 
-  const signOutSupabase = () => {
-    if (!supabase) return;
-    void supabase.auth.signOut().then(({ error }) => {
-      if (error) showNotification('error', `Gagal mengakhiri sesi Supabase: ${error.message}`);
-    });
-  };
-
   const setActiveAccount = (account: Web3Account) => {
-    if (supabaseUserId && account.address !== supabaseUserId) {
-      signOutSupabase();
-      setSupabaseUserId(null);
-    }
     setActiveAccountState(account);
     showNotification('info', `Beralih ke akun: ${account.name} (${account.label})`);
   };
 
   // Auth Methods
   const loginWithWallet = async (walletType: 'phantom' | 'solflare' | 'backpack') => {
-    if (supabase) {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw new Error(error.message);
-      setSupabaseUserId(null);
-    }
     const target = allAccounts.find(a => a.authMethod === walletType) || allAccounts[0];
     setActiveAccountState(target);
     setUserAuth({
@@ -584,11 +281,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithMetaMask = async (role: LoginRole = 'buyer'): Promise<{ success: boolean; address?: string; error?: string }> => {
     try {
-      if (supabase) {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw new Error(error.message);
-        setSupabaseUserId(null);
-      }
       let ethAddress = '';
       if (typeof window !== 'undefined' && (window as any).ethereum) {
         try {
@@ -661,45 +353,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginWithEmail = async (email: string, name?: string, role: LoginRole = 'buyer', password?: string) => {
-    if (password && supabase && isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw new Error(error.message);
-      if (!data.user) throw new Error('Login berhasil tetapi data akun Supabase tidak ditemukan.');
-
-      const account = createAccountFromSupabaseUser(data.user, name, role);
-      const cachedAccount = allAccounts.find(item => item.address === data.user.id);
-      const activeAccount = cachedAccount
-        ? { ...account, balanceSol: cachedAccount.balanceSol, balanceAmn: cachedAccount.balanceAmn, balanceUsdc: cachedAccount.balanceUsdc, stakedAmn: cachedAccount.stakedAmn }
-        : account;
-      setAllAccounts(previous => previous.some(item => item.address === account.address)
-        ? previous.map(item => item.address === account.address ? activeAccount : item)
-        : [...previous, activeAccount]);
-      setActiveAccountState(activeAccount);
-      setSupabaseUserId(data.user.id);
-      setUserAuth({
-        isLoggedIn: true,
-        method: 'email',
-        email: data.user.email,
-        displayName: activeAccount.name,
-        avatarUrl: activeAccount.avatarUrl,
-        walletAddress: activeAccount.address,
-        role: activeAccount.role,
-        securityPhrase: activeAccount.securityPhrase,
-        reputationScore: activeAccount.reputationScore,
-        stakedAmn: activeAccount.stakedAmn,
-        vipTier: activeAccount.stakedAmn >= 5000 ? 'Amanah VIP Gold' : 'Standard'
-      });
-      showNotification('success', `Berhasil masuk sebagai ${activeAccount.name}. Katalog dan pesanan tersinkron melalui Supabase; saldo dan transaksi tetap simulasi.`);
-      return;
-    }
-
-    if (supabase) {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw new Error(error.message);
-      setSupabaseUserId(null);
-    }
-
+  const loginWithEmail = async (email: string, name?: string, role: LoginRole = 'buyer') => {
     let existing = allAccounts.find(a => a.email?.toLowerCase() === email.toLowerCase());
     if (!existing) {
       const generatedAddress = (role === 'admin' ? 'Admn' : role === 'seller' ? 'Sell' : role === 'courier' ? 'Cour' : 'Buyr') + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10) + 'Sol';
@@ -738,55 +392,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       stakedAmn: existing.stakedAmn,
       vipTier: role === 'admin' ? 'Amanah VIP Gold' : 'Standard'
     });
-    showNotification(
-      isSupabaseConfigured ? 'info' : 'success',
-      isSupabaseConfigured
-        ? `Berhasil masuk sebagai ${existing.name} (${existing.label}) dalam mode demo. Data hanya tersimpan pada browser ini.`
-        : `Berhasil masuk sebagai ${existing.name} (${existing.label}) dalam mode demo lokal. Data katalog dan pesanan hanya tersimpan di browser ini; konfigurasi Supabase diperlukan untuk sinkronisasi antarperangkat.`
-    );
+    showNotification('success', `Berhasil masuk sebagai ${existing.name} (${existing.label}). Solana Keypair aktif.`);
   };
 
-  const registerWithEmail = async (email: string, name: string, role: LoginRole, securityPhrase?: string, password?: string) => {
-    if (password && supabase && isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name, role },
-          emailRedirectTo: window.location.origin
-        }
-      });
-      if (error) throw new Error(error.message);
-      if (!data.user) throw new Error('Supabase tidak mengembalikan data akun setelah pendaftaran.');
-      if (!data.session) {
-        showNotification('info', 'Pendaftaran berhasil. Verifikasi alamat email melalui tautan yang dikirim sebelum masuk.');
-        throw new Error('Pendaftaran berhasil. Silakan verifikasi email, lalu masuk dengan kata sandi Anda.');
-      }
-
-      const account = {
-        ...createAccountFromSupabaseUser(data.user, name, role),
-        securityPhrase: securityPhrase || 'Solana-Amanah-Proteksi-AntiPhishing'
-      };
-      setAllAccounts(previous => [...previous.filter(item => item.address !== account.address), account]);
-      setActiveAccountState(account);
-      setSupabaseUserId(data.user.id);
-      setUserAuth({
-        isLoggedIn: true,
-        method: 'email',
-        email,
-        displayName: account.name,
-        avatarUrl: account.avatarUrl,
-        walletAddress: account.address,
-        role: account.role,
-        securityPhrase: account.securityPhrase,
-        reputationScore: account.reputationScore,
-        stakedAmn: account.stakedAmn,
-        vipTier: account.stakedAmn >= 5000 ? 'Amanah VIP Gold' : 'Standard'
-      });
-      showNotification('success', `Akun berhasil dibuat. Data katalog dan pesanan akan disimpan ke Supabase; saldo tetap demo.`);
-      return;
-    }
-
+  const registerWithEmail = async (email: string, name: string, role: LoginRole, securityPhrase?: string) => {
     const generatedAddress = (role === 'admin' ? 'Admn' : role === 'seller' ? 'Sell' : role === 'courier' ? 'Cour' : 'Amnh') + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10) + 'Sol';
     const newAccount: Web3Account = {
       address: generatedAddress,
@@ -818,19 +427,10 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       stakedAmn: newAccount.stakedAmn,
       vipTier: role === 'admin' ? 'Amanah VIP Gold' : 'Standard'
     });
-    showNotification(
-      isSupabaseConfigured ? 'info' : 'success',
-      isSupabaseConfigured
-        ? `Akun demo ${name} (${newAccount.label}) siap digunakan. Data hanya tersimpan pada browser ini.`
-        : `Pendaftaran demo berhasil. Akun dan data hanya tersimpan pada browser ini; konfigurasi Supabase diperlukan untuk sinkronisasi antarperangkat.`
-    );
+    showNotification('success', `Pendaftaran berhasil! Akun ${name} (${newAccount.label}) siap digunakan.`);
   };
 
   const logout = () => {
-    if (supabaseUserId) {
-      signOutSupabase();
-      setSupabaseUserId(null);
-    }
     setUserAuth({
       isLoggedIn: false,
       method: null,
@@ -962,7 +562,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: false, error: 'Insufficient AMN' };
     }
 
-    const orderId = generateOrderId(orders);
+    const orderId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 101;
     const txHash = generateSolanaTxSignature();
     const pdaAddress = generateSolanaPda(orderId);
     const vaultPda = pdaAddress + 'Vault';
@@ -1013,7 +613,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       status: OrderStatus.Funded,
       desc: `Pembelian ${params.productName} (${params.variation} x${params.quantity}) dengan perlindungan Solana Escrow PDA & DeFi Yield Streaming.`,
       productName: params.productName,
-      productId: product ? product.id : undefined,
       category: 'Smartphone',
       selectedVariation: params.variation,
       quantity: params.quantity,
@@ -1039,20 +638,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ]
     };
 
-    if (supabase && supabaseUserId) {
-      const { error } = await supabase.from('orders').insert({
-        id: newOrder.id,
-        buyer_address: newOrder.buyer,
-        seller_address: newOrder.seller,
-        payload: newOrder
-      });
-      if (error) {
-        showNotification('error', `Pesanan gagal disimpan ke Supabase: ${error.message}`);
-        return { success: false, error: error.message };
-      }
-      orderSnapshot.current.set(newOrder.id, JSON.stringify(newOrder));
-    }
-
     setActiveAccountState(prev => adjustOrderPaymentBalance({
       ...prev,
       balanceSol: +(prev.balanceSol - SOLANA_GAS_FEE_SOL).toFixed(9)
@@ -1063,18 +648,13 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
           balanceSol: +(account.balanceSol - SOLANA_GAS_FEE_SOL).toFixed(9)
         }, newOrder, -1)
       : account));
-    if (product && (!supabaseUserId || !cloudProductIds.current.has(product.id))) {
-      const expectedStock = product.stock - params.quantity;
-      const updatedProduct = { ...product, stock: expectedStock, isAvailable: expectedStock > 0 };
-      if (supabaseUserId) productSnapshot.current.set(product.id, JSON.stringify(updatedProduct));
-      setProducts(prev => prev.map(item => {
-        if (item.id !== product.id) return item;
-        const stock = Math.min(item.stock, expectedStock);
-        return { ...item, stock, isAvailable: stock > 0 };
-      }));
+    if (product) {
+      setProducts(prev => prev.map(item => item.id === product.id
+        ? { ...item, stock: item.stock - params.quantity, isAvailable: item.stock - params.quantity > 0 }
+        : item));
     }
 
-    setOrders(prev => [newOrder, ...prev.filter(order => order.id !== newOrder.id)]);
+    setOrders(prev => [newOrder, ...prev]);
 
     showNotification(
       'success',
@@ -1780,7 +1360,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     productName: string;
     category: string;
   }) => {
-    const orderId = generateOrderId(orders);
+    const orderId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 101;
     const txHash = generateSolanaTxSignature();
     const pdaAddress = generateSolanaPda(orderId);
 
@@ -1891,7 +1471,6 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         activeAccount,
         allAccounts,
         userAuth,
-        dataSyncStatus,
         tokenomics,
         isProtocolPaused,
         currentSlot,
